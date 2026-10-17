@@ -1,0 +1,108 @@
+tables:
+  gift_card:
+    description: >
+      One issued gift card. Core entity of the service; lifecycle is
+      active -> redeemed (balance reaches zero) or active -> expired
+      (past expiry, swept by the scheduled expiry job).
+    columns:
+      gift_card_id:
+        type: bigint
+        description: Surrogate primary key, identity-generated. Internal use only.
+      code:
+        type: text
+        description: >
+          The card code shoppers hold: 16 characters, uppercase A-Z and
+          digits 2-9 (LD2). Globally unique, never reused. The external
+          identifier for all API lookups.
+      initial_amount:
+        type: numeric(12,2)
+        description: Face value of the card at issuance, USD. Never changes.
+      balance:
+        type: numeric(12,2)
+        description: >
+          Remaining spendable amount, USD. Decremented by redemptions;
+          constrained non-negative (R2).
+      status:
+        type: gift_card_status (enum)
+        description: >
+          One of active, redeemed, expired. active -> redeemed when the
+          balance reaches zero (AC2.5); active -> expired by the expiry
+          sweep (UC4). No other transitions.
+      issued_at:
+        type: timestamptz
+        description: When the card was issued (UC1).
+      created_at:
+        type: timestamptz
+        description: Row creation time.
+      updated_at:
+        type: timestamptz
+        description: Last modification time, set by the backend on every change.
+
+  redemption:
+    description: >
+      Append-only record of one spend against a card (R4). At most one
+      row per (card, order reference) - this is what makes checkout
+      retries safe (AC2.3).
+    columns:
+      redemption_id:
+        type: bigint
+        description: Surrogate primary key, identity-generated.
+      gift_card_id:
+        type: bigint
+        description: FK to gift_card.gift_card_id - the card that was spent.
+      amount:
+        type: numeric(12,2)
+        description: Amount deducted from the card by this redemption, USD.
+      order_ref:
+        type: text
+        description: >
+          The commerce backend's order reference that caused this
+          redemption. Unique per card (uq_redemption_card_order).
+      redeemed_at:
+        type: timestamptz
+        description: When the redemption was applied.
+      created_at:
+        type: timestamptz
+        description: Row creation time (same transaction as the balance update).
+
+  event_outbox:
+    description: >
+      Transactional outbox for ledger notifications (R5): one row per
+      issuance or redemption, written in the same transaction as the
+      state change it reports. A scheduled publisher delivers
+      unpublished rows to Pub/Sub and stamps published_at.
+    columns:
+      outbox_id:
+        type: bigint
+        description: Surrogate primary key, identity-generated.
+      gift_card_id:
+        type: bigint
+        description: FK to gift_card.gift_card_id - the card the event is about.
+      topic:
+        type: text
+        description: >
+          Pub/Sub topic the payload belongs to (gift-card-issued-v1 or
+          gift-card-redeemed-v1, per the architecture event catalog).
+      payload:
+        type: jsonb
+        description: >
+          The exact event JSON to publish, snapshotted at write time
+          (schema per the architecture event catalog).
+      attempt_count:
+        type: int
+        description: >
+          Number of publish attempts. Incremented on each failure; used
+          to alert on rows stuck past a threshold.
+      last_error:
+        type: text
+        description: >
+          Text of the most recent publish failure, if any. Null when
+          never failed or already published.
+      published_at:
+        type: timestamptz
+        description: >
+          When the publisher delivered this event. Null while
+          unpublished; the publisher polls WHERE published_at IS NULL.
+      created_at:
+        type: timestamptz
+        description: Row creation time (same transaction as the state change).

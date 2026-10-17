@@ -1,0 +1,34 @@
+{
+  "name": "backend-skills",
+  "owner": {
+    "name": "si1verwind17"
+  },
+  "metadata": {
+    "description": "Agent skills for building backend services from requirements: business requirements, data design, architecture, stack selection, code conventions and a design-review page.",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "backend-development",
+      "source": "./",
+      "strict": false,
+      "description": "Requirements to implementation for backend services: business requirements, data design, architecture, stack selection, code conventions, and a human-readable design-review page, orchestrated end to end.",
+      "version": "1.0.0",
+      "author": {
+        "name": "si1verwind17"
+      },
+      "license": "MIT",
+      "keywords": ["backend", "architecture", "data-design", "requirements", "conventions"],
+      "category": "development",
+      "skills": [
+        "./skills/building-backend-services",
+        "./skills/writing-business-requirements",
+        "./skills/backend-design-by-data",
+        "./skills/backend-architecture",
+        "./skills/backend-stack-selection",
+        "./skills/backend-code-conventions",
+        "./skills/rendering-design-docs"
+      ]
+    }
+  ]
+}

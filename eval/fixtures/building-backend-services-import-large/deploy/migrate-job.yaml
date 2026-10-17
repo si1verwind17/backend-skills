@@ -1,0 +1,28 @@
+# Cloud Run job that applies pending migrations (python -m app.migrate)
+# with the same image as the service. cloudbuild.yaml replaces and
+# executes it before rolling out a new service revision.
+apiVersion: run.googleapis.com/v1
+kind: Job
+metadata:
+  name: parking-reservation-migrate
+spec:
+  template:
+    metadata:
+      annotations:
+        run.googleapis.com/cloudsql-instances: __PROJECT_ID__:europe-west4:parking-pg
+    spec:
+      taskCount: 1
+      template:
+        spec:
+          serviceAccountName: parking-reservation@__PROJECT_ID__.iam.gserviceaccount.com
+          maxRetries: 0
+          timeoutSeconds: 600
+          containers:
+            - image: __IMAGE_URL__
+              command: ["python", "-m", "app.migrate"]
+              env:
+                - name: DATABASE_URL
+                  valueFrom:
+                    secretKeyRef:
+                      name: parking-database-url
+                      key: latest

@@ -1,0 +1,122 @@
+/* design-review page theme — process rail: the steps as a numbered rail on the left, the document on a card.
+   Built into skills/rendering-design-docs/theme/review-page.css by tools/build_review_theme.py, which embeds the
+   font. Edit this file, then rebuild. */
+@font-face{font-family:"Archivo";src:url(data:font/woff2;base64,@@FONT@@) format("woff2");font-weight:100 900;font-stretch:62% 125%}
+*{box-sizing:border-box}
+body{margin:0;font-variant-numeric:tabular-nums}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.js .panel[hidden]{display:none}
+.banner p{margin:0}
+.oi dl,.later details dl{display:grid;grid-template-columns:max-content minmax(0,78ch);gap:3px 16px;margin:8px 0 0}
+.oi dd,.later dd{margin:0}
+.later ul{list-style:none;margin:0;padding:0}
+.later details > summary{cursor:pointer}
+.doc p,.doc li{max-width:76ch}
+.doc table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}
+.doc table > *{min-width:100%}
+.doc th,.doc td{text-align:left;vertical-align:top}
+.doc td[id]{white-space:nowrap}
+.doc pre{overflow:auto}
+.doc .header-lines{white-space:pre-line}
+.diagram{overflow:auto;margin:18px 0}
+.diagram svg{display:block;margin:0 auto;max-width:none;height:auto;background:transparent!important}
+.idref{white-space:nowrap}
+[id]{scroll-margin-top:24px}
+
+:root{
+  --bg:#eef2f5;--card:#ffffff;--line:#dfe5ea;--ink:#1a1f24;--muted:#5b6670;--rail:#c9d3db;
+  --teal:#2ec4c0;--teal-ink:#0d1b1b;--link:#0e7a76;--teal-wash:#e5f7f6;
+  --ok:#1a7a43;--ok-wash:#e3f4ea;--rev:#8a5a00;--rev-wash:#fdf1d8;--draft:#5b6670;--draft-wash:#eceff2;
+  --block:#c0352b;--block-wash:#fdecea;--code:#f3f5f7;--diagram:#ffffff;color-scheme:light;
+  --font:"Archivo",system-ui,sans-serif;--mono:ui-monospace,"JetBrains Mono",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#0c1013;--card:#141a1f;--line:#232c34;--ink:#e6ebef;--muted:#98a4ae;--rail:#2c3741;
+  --teal:#2ec4c0;--teal-ink:#0d1b1b;--link:#5fd9d5;--teal-wash:#10302f;
+  --ok:#5fd18e;--ok-wash:#123222;--rev:#f0c05a;--rev-wash:#33280d;--draft:#98a4ae;--draft-wash:#1f272e;
+  --block:#ff8a80;--block-wash:#371614;--code:#1a2127;--diagram:#eef2f5;color-scheme:dark;
+}}
+body{background:var(--bg);color:var(--ink);font:16px/1.65 var(--font)}
+::selection{background:var(--teal);color:var(--teal-ink)}
+a{color:var(--link);text-decoration:none}
+a:hover{text-decoration:underline;text-underline-offset:3px}
+:focus-visible{outline:2px solid var(--teal);outline-offset:2px;border-radius:4px}
+.wrap{max-width:1360px;margin:0 auto;padding:0 32px;display:grid;grid-template-columns:260px minmax(0,1fr);column-gap:36px}
+.top{grid-column:1 / -1;padding:32px 0 24px}
+.top h1{margin:0;font-size:1.9rem;line-height:1.2;font-weight:750;font-stretch:90%}
+.top h1 .what{color:var(--muted);font-weight:450}
+.gen,.sources{margin:4px 0 0;color:var(--muted);font-size:.875rem}
+.banner{display:flex;gap:14px;align-items:baseline;margin:18px 0 0;padding:12px 16px;border-radius:10px;background:var(--card);border:1px solid var(--line)}
+.banner .rows{display:grid;grid-template-columns:max-content 1fr;gap:2px 16px}
+.banner p{display:contents}
+.banner .when{font-weight:600}
+.banner .idref{font-weight:600}
+
+.chip,.badge{display:inline-block;padding:3px 8px;border-radius:6px;font-size:.72rem;font-weight:650;line-height:1.2;letter-spacing:.02em;white-space:nowrap}
+.badge.APPROVED{color:var(--ok);background:var(--ok-wash)}
+.badge.REVIEWED{color:var(--rev);background:var(--rev-wash)}
+.badge.DRAFT{color:var(--draft);background:var(--draft-wash)}
+.chip.blocking{background:var(--block);color:#fff}
+@media (prefers-color-scheme:dark){.chip.blocking{color:#2a0d0a}}
+.chip.gate{background:var(--teal);color:var(--teal-ink)}
+
+/* the rail */
+.tabs{grid-column:1;align-self:start;position:sticky;top:24px;display:flex;flex-direction:column;gap:2px;padding:4px 0 0}
+.tabs::before{content:"Steps";margin:0 0 8px 2px;color:var(--muted);font-size:.78rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+.tab{position:relative;display:grid;grid-template-columns:32px auto auto 1fr;grid-template-rows:auto auto;column-gap:12px;row-gap:4px;
+  align-items:center;padding:10px 10px 10px 8px;border-radius:10px;color:var(--ink);font-weight:550}
+.tab .tl{grid-column:2 / -1;grid-row:1}
+.tab:hover{background:var(--card);text-decoration:none}
+.tab .tn{grid-row:1 / span 2;display:grid;place-items:center;width:30px;height:30px;border-radius:50%;
+  background:var(--card);border:2px solid var(--rail);color:var(--muted);font-size:.85rem;font-weight:700;z-index:1}
+.tab:not(.context):not(.change) + .tab:not(.context):not(.change)::before{content:"";position:absolute;left:22px;top:-14px;height:28px;width:2px;background:var(--rail)}
+.tab .badge{grid-column:2;grid-row:2;justify-self:start}
+.tab .chip.gate{grid-column:3;grid-row:2;justify-self:start;margin-left:-6px}
+.tab[aria-current="page"]{background:var(--card);box-shadow:0 1px 2px rgba(0,0,0,.06),0 0 0 1px var(--line)}
+.tab[aria-current="page"] .tn{background:var(--teal);border-color:var(--teal);color:var(--teal-ink)}
+.tab .touched{position:absolute;right:10px;top:14px;width:8px;height:8px;border-radius:50%;background:var(--teal)}
+.tabs .spacer{height:18px;border-bottom:1px solid var(--line);margin:0 8px 14px}
+.tab.context,.tab.change{display:flex;padding-left:14px;font-style:italic;font-weight:500;color:var(--muted)}
+
+main{grid-column:2;padding-bottom:48px;min-width:0}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:8px 40px 40px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+.panel-head{display:flex;align-items:center;gap:10px;padding:20px 0 0;color:var(--muted);font-size:.875rem}
+.panel-head .pn{color:var(--ink);font-weight:650}
+
+.owed{margin:18px 0 0;padding:18px 20px;border-radius:12px;background:var(--teal-wash)}
+.owed > h2{margin:0;font-size:1rem;font-weight:750}
+.owed .none{margin:4px 0 0;color:var(--muted)}
+.oi{margin:12px 0 0;padding:14px 16px;background:var(--card);border-radius:10px;border:1px solid var(--line)}
+.oi-title{margin:0;font-weight:600;max-width:90ch}
+.oi-title .chip{margin-right:8px;vertical-align:1px}
+.oi .oi-id{color:var(--muted);margin-right:6px}
+.oi dl{font-size:.9rem}.oi dt,.later dt{color:var(--muted)}
+.later{margin:16px 0 0}
+.later > h3{margin:0;font-size:.9rem;font-weight:700;color:var(--muted)}
+.later h4{margin:10px 0 2px;font-size:.76rem;font-weight:650;color:var(--muted);letter-spacing:.05em;text-transform:uppercase}
+.later li{padding:3px 0;font-size:.92rem}
+.later .oi-id{color:var(--muted);margin-right:6px;font-weight:650}
+.later details[open]{margin:4px 0 8px;padding:8px 12px;background:var(--card);border:1px solid var(--line);border-radius:10px}
+.later details dl{font-size:.9rem}
+
+.doc h1{margin:36px 0 4px;font-size:1.8rem;line-height:1.25;font-weight:750;font-stretch:90%}
+.doc .header-lines{margin:0 0 20px;color:var(--muted);font-size:.875rem}
+.doc h2{margin:2.4em 0 .6em;font-size:1.42rem;font-weight:700}
+.doc h3{margin:1.8em 0 .4em;font-size:1.08rem;font-weight:650}
+.doc h4{margin:1.4em 0 .4em;font-size:1rem;font-weight:650}
+.doc code{font-family:var(--mono);font-size:.86em;background:var(--code);padding:1px 5px;border-radius:4px}
+.doc pre{background:var(--code);border-radius:10px;padding:14px 16px;font-size:.84rem;line-height:1.55}
+.doc pre code{background:none;padding:0}
+.doc table{margin:16px 0;font-size:.9rem}
+.doc th,.doc td{padding:8px 12px;border-bottom:1px solid var(--line)}
+.doc th{font-size:.78rem;font-weight:650;color:var(--muted);background:var(--code)}
+.doc td[id]{font-weight:650}
+.doc blockquote{margin:14px 0;padding:2px 16px;border-left:2px solid var(--line);color:var(--muted)}
+.diagram{padding:20px;background:var(--diagram);border:1px solid var(--line);border-radius:12px}
+:target:not(.panel){background:var(--teal-wash);border-radius:4px}
+.doc tr:has(> :target) > td{background:var(--teal-wash)}
+.idref{font-weight:550}
+.context-note{margin:20px 0 0;padding:10px 14px;border-radius:10px;background:var(--code);color:var(--muted);font-style:italic}
+footer{grid-column:2;margin:8px 0 40px;color:var(--muted);font-size:.84rem}
+@media print{body{background:#fff}.wrap{display:block}.tabs,.banner{display:none}.js .panel[hidden]{display:block}
+  .panel{border:none;box-shadow:none;padding:0}}

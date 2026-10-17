@@ -1,0 +1,5 @@
+fastapi==0.141.1
+uvicorn[standard]==0.52.3
+pydantic==2.13.4
+psycopg[binary,pool]==3.3.4
+google-cloud-pubsub==2.39.1

@@ -1,0 +1,63 @@
+# Cloud Run service. Applied by cloudbuild.yaml with
+#   gcloud run services replace deploy/service.yaml
+# after __IMAGE_URL__ is substituted with the image built for the commit.
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: parking-reservation-service
+  labels:
+    team: parking-platform
+  annotations:
+    run.googleapis.com/ingress: internal-and-cloud-load-balancing
+spec:
+  template:
+    metadata:
+      annotations:
+        autoscaling.knative.dev/minScale: "1"
+        autoscaling.knative.dev/maxScale: "20"
+        run.googleapis.com/cloudsql-instances: __PROJECT_ID__:europe-west4:parking-pg
+        run.googleapis.com/cpu-throttling: "true"
+    spec:
+      serviceAccountName: parking-reservation@__PROJECT_ID__.iam.gserviceaccount.com
+      containerConcurrency: 40
+      timeoutSeconds: 60
+      containers:
+        - image: __IMAGE_URL__
+          ports:
+            - containerPort: 8080
+          resources:
+            limits:
+              cpu: "1"
+              memory: 512Mi
+          env:
+            - name: GCP_PROJECT_ID
+              value: __PROJECT_ID__
+            - name: OUTBOX_BATCH_SIZE
+              value: "100"
+            - name: SETTLEMENT_BATCH_SIZE
+              value: "200"
+            - name: NOTIFICATION_BATCH_SIZE
+              value: "200"
+            - name: REMINDER_LEAD_MINUTES
+              value: "60"
+            - name: QUOTE_TTL_MINUTES
+              value: "30"
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: parking-database-url
+                  key: latest
+            - name: INTERNAL_ENDPOINT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: parking-internal-endpoint-token
+                  key: latest
+          startupProbe:
+            httpGet:
+              path: /healthz
+            periodSeconds: 5
+            failureThreshold: 12
+          livenessProbe:
+            httpGet:
+              path: /healthz
+            periodSeconds: 30

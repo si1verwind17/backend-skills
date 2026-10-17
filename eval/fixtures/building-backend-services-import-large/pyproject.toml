@@ -1,0 +1,11 @@
+[project]
+name = "parking-reservation-service"
+version = "0.1.0"
+requires-python = ">=3.14"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+markers = [
+    "integration: requires Docker (Testcontainers) for a real Postgres instance",
+]

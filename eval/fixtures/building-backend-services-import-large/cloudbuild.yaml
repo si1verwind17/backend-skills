@@ -1,0 +1,59 @@
+# Build, test and deploy on every push to main (Cloud Build trigger).
+# The GitHub Actions workflow runs the full test suite, including the
+# Postgres integration tests, on pull requests.
+substitutions:
+  _REGION: europe-west4
+  _REPO: parking
+  _SERVICE: parking-reservation-service
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+
+steps:
+  - id: unit-tests
+    name: python:3.14-slim
+    entrypoint: sh
+    args:
+      - -c
+      - |
+        pip install --no-cache-dir -r requirements-dev.txt &&
+        python -m pytest tests/unit -q
+
+  - id: build
+    name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - -t
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_SERVICE}:$SHORT_SHA
+      - .
+
+  - id: push
+    name: gcr.io/cloud-builders/docker
+    args: [push, "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_SERVICE}:$SHORT_SHA"]
+
+  - id: render-manifests
+    name: gcr.io/cloud-builders/gcloud
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        image="${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_SERVICE}:$SHORT_SHA"
+        for f in deploy/service.yaml deploy/migrate-job.yaml; do
+          sed -e "s|__IMAGE_URL__|$$image|g" -e "s|__PROJECT_ID__|$PROJECT_ID|g" "$$f" > "/workspace/$$(basename "$$f")"
+        done
+
+  - id: migrate
+    name: gcr.io/cloud-builders/gcloud
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        gcloud run jobs replace /workspace/migrate-job.yaml --region=${_REGION} &&
+        gcloud run jobs execute parking-reservation-migrate --region=${_REGION} --wait
+
+  - id: deploy
+    name: gcr.io/cloud-builders/gcloud
+    args: [run, services, replace, /workspace/service.yaml, --region=${_REGION}]
+
+images:
+  - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_SERVICE}:$SHORT_SHA
