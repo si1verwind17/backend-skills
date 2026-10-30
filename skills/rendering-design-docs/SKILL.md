@@ -31,11 +31,24 @@ add it to `.git/info/exclude` the first time (see `documents.md` in the
   logic; the page looks the same on every run, light or dark with the
   reader's system. Your job is the markup below. Without scripting the page
   still works: every tab's content is shown, one after another.
+- **Reading aids come from the theme, not from you**: under the step rail,
+  an outline of the open tab, built from its `h2`–`h4` headings (an `h4`
+  shows only while its section is being read), so a long data tab stays
+  navigable; diagrams wider than the column are scaled to fit it, with a
+  bar saying the scale and a full-size viewer (pan, zoom, fit, 1:1); table
+  header rows stay in view while scrolling, and a table too wide for the
+  column scrolls in its own box. So never write a table of contents,
+  zoom controls, or wrappers around tables and diagrams — keep the
+  document's headings as real `h2`–`h4` elements and each diagram as
+  `<figure class="diagram">` with its `<svg>` as a direct child.
 - **Diagrams in the theme's colours**: render every Mermaid block with
   [`theme/mermaid.json`](theme/mermaid.json) as its config and a
   transparent background — pre-rendered to inline SVG when a renderer is
   available locally (`mmdc -c theme/mermaid.json -b transparent`), so the
   page works fully offline; make each SVG's internal ids unique per diagram.
+  Keep the SVG at its natural size (`useMaxWidth: false`, as the config
+  sets it): the theme scales it down to the column and the viewer needs
+  the natural size for 1:1.
   Inlining the diagram library itself (initialised with the same config)
   also works offline, at the cost of a large file. A Mermaid CDN include is
   the acceptable fallback; it is the one permitted external dependency, and
@@ -182,6 +195,8 @@ phase 4 (implementation) has no tab — its items go to the gate tab's
       (rendered with `theme/mermaid.json`, transparent background), and
       in its own place: under each heading, the diagram drawn from that
       heading's block — check one label from each against its source.
+      Open the widest diagram's full-size viewer once: it shows the whole
+      diagram and closes back into its place.
 - [ ] One tab per step document present, in chain order, each with its
       status badge matching the document's `Status:` line; no tab for a
       missing step; no implementation tab; Change tab first only when a
@@ -210,6 +225,9 @@ Write any generator script or scratch file outside the user's repository
 - Open items listed only once at the top, away from the step that must
   decide them.
 - External CSS/font/JS dependencies beyond the single diagram script.
+- A hand-made table of contents, diagram zoom, or table wrapper — the
+  theme provides them; a heading written as bold text drops out of the
+  outline.
 - Editing the HTML by hand to fix a content issue that belongs in the
   markdown.
 - Rendering a stale page at a gate — regenerate after every doc change.

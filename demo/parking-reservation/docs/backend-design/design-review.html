@@ -16,14 +16,31 @@ body{margin:0;font-variant-numeric:tabular-nums}
 .later ul{list-style:none;margin:0;padding:0}
 .later details > summary{cursor:pointer}
 .doc p,.doc li{max-width:76ch}
-.doc table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}
-.doc table > *{min-width:100%}
+.doc table{width:100%;border-collapse:separate;border-spacing:0}
+.doc thead th{position:sticky;top:0;z-index:1}
+.table-scroll{overflow-x:auto;margin:16px 0}
+.table-scroll > table{margin:0}
+.table-scroll thead th{position:static}
 .doc th,.doc td{text-align:left;vertical-align:top}
 .doc td[id]{white-space:nowrap}
 .doc pre{overflow:auto}
 .doc .header-lines{white-space:pre-line}
-.diagram{overflow:auto;margin:18px 0}
-.diagram svg{display:block;margin:0 auto;max-width:none;height:auto;background:transparent!important}
+.diagram{margin:18px 0}
+.diagram > svg{display:block;margin:0 auto;max-width:100%;height:auto;background:transparent!important}
+.diagram.scaled > svg{cursor:zoom-in}
+.diagram-bar{display:flex;align-items:center;justify-content:flex-end;gap:12px}
+.diagram-scale:empty{display:none}
+.viewer[hidden]{display:none}
+.viewer{position:fixed;inset:0;z-index:10;display:flex;flex-direction:column}
+.viewing,.viewing body{overflow:hidden}
+.viewer-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.viewer-title{margin:0 auto 0 0}
+.viewer-stage{flex:1;display:flex;overflow:auto;cursor:grab;touch-action:none}
+.viewer-stage.dragging{cursor:grabbing;user-select:none}
+.viewer-stage > svg{flex:none;margin:auto;max-width:none;background:transparent!important}
+.toc ul{list-style:none;margin:0;padding:0}
+.toc li.l3{display:none}
+.toc li.l3.open{display:block}
 .idref{white-space:nowrap}
 [id]{scroll-margin-top:24px}
 
@@ -31,21 +48,21 @@ body{margin:0;font-variant-numeric:tabular-nums}
   --bg:#eef2f5;--card:#ffffff;--line:#dfe5ea;--ink:#1a1f24;--muted:#5b6670;--rail:#c9d3db;
   --teal:#2ec4c0;--teal-ink:#0d1b1b;--link:#0e7a76;--teal-wash:#e5f7f6;
   --ok:#1a7a43;--ok-wash:#e3f4ea;--rev:#8a5a00;--rev-wash:#fdf1d8;--draft:#5b6670;--draft-wash:#eceff2;
-  --block:#c0352b;--block-wash:#fdecea;--code:#f3f5f7;--diagram:#ffffff;color-scheme:light;
+  --block:#c0352b;--block-wash:#fdecea;--code:#f3f5f7;--hover:#f8fafb;--diagram:#ffffff;color-scheme:light;
   --font:"Archivo",system-ui,sans-serif;--mono:ui-monospace,"JetBrains Mono",Menlo,Consolas,monospace;
 }
 @media (prefers-color-scheme:dark){:root{
   --bg:#0c1013;--card:#141a1f;--line:#232c34;--ink:#e6ebef;--muted:#98a4ae;--rail:#2c3741;
   --teal:#2ec4c0;--teal-ink:#0d1b1b;--link:#5fd9d5;--teal-wash:#10302f;
   --ok:#5fd18e;--ok-wash:#123222;--rev:#f0c05a;--rev-wash:#33280d;--draft:#98a4ae;--draft-wash:#1f272e;
-  --block:#ff8a80;--block-wash:#371614;--code:#1a2127;--diagram:#eef2f5;color-scheme:dark;
+  --block:#ff8a80;--block-wash:#371614;--code:#1a2127;--hover:#182026;--diagram:#eef2f5;color-scheme:dark;
 }}
 body{background:var(--bg);color:var(--ink);font:16px/1.65 var(--font)}
 ::selection{background:var(--teal);color:var(--teal-ink)}
 a{color:var(--link);text-decoration:none}
 a:hover{text-decoration:underline;text-underline-offset:3px}
 :focus-visible{outline:2px solid var(--teal);outline-offset:2px;border-radius:4px}
-.wrap{max-width:1360px;margin:0 auto;padding:0 32px;display:grid;grid-template-columns:260px minmax(0,1fr);column-gap:36px}
+.wrap{max-width:1680px;margin:0 auto;padding:0 32px;display:grid;grid-template-columns:260px minmax(0,1fr);column-gap:36px}
 .top{grid-column:1 / -1;padding:32px 0 24px}
 .top h1{margin:0;font-size:1.9rem;line-height:1.2;font-weight:750;font-stretch:90%}
 .top h1 .what{color:var(--muted);font-weight:450}
@@ -65,7 +82,8 @@ a:hover{text-decoration:underline;text-underline-offset:3px}
 .chip.gate{background:var(--teal);color:var(--teal-ink)}
 
 /* the rail */
-.tabs{grid-column:1;align-self:start;position:sticky;top:24px;display:flex;flex-direction:column;gap:2px;padding:4px 0 0}
+.tabs{grid-column:1;align-self:start;position:sticky;top:24px;display:flex;flex-direction:column;gap:2px;padding:4px 4px 24px 0;
+  max-height:calc(100vh - 24px);overflow-y:auto;scrollbar-width:thin}
 .tabs::before{content:"Steps";margin:0 0 8px 2px;color:var(--muted);font-size:.78rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase}
 .tab{position:relative;display:grid;grid-template-columns:32px auto auto 1fr;grid-template-rows:auto auto;column-gap:12px;row-gap:4px;
   align-items:center;padding:10px 10px 10px 8px;border-radius:10px;color:var(--ink);font-weight:550}
@@ -80,6 +98,7 @@ a:hover{text-decoration:underline;text-underline-offset:3px}
 .tab[aria-current="page"] .tn{background:var(--teal);border-color:var(--teal);color:var(--teal-ink)}
 .tab .touched{position:absolute;right:10px;top:14px;width:8px;height:8px;border-radius:50%;background:var(--teal)}
 .tabs .spacer{height:18px;border-bottom:1px solid var(--line);margin:0 8px 14px}
+.tabs .spacer:nth-last-child(2){display:none}
 .tab.context,.tab.change{display:flex;padding-left:14px;font-style:italic;font-weight:500;color:var(--muted)}
 
 main{grid-column:2;padding-bottom:48px;min-width:0}
@@ -114,16 +133,40 @@ main{grid-column:2;padding-bottom:48px;min-width:0}
 .doc table{margin:16px 0;font-size:.9rem}
 .doc th,.doc td{padding:8px 12px;border-bottom:1px solid var(--line)}
 .doc th{font-size:.78rem;font-weight:650;color:var(--muted);background:var(--code)}
+.doc tbody tr:hover > td{background:var(--hover)}
+.doc td code{overflow-wrap:anywhere}
 .doc td[id]{font-weight:650}
 .doc blockquote{margin:14px 0;padding:2px 16px;border-left:2px solid var(--line);color:var(--muted)}
 .diagram{padding:20px;background:var(--diagram);border:1px solid var(--line);border-radius:12px}
+.diagram-bar{margin:12px -8px -8px 0;font-size:.8rem;color:#5b6670}
+.diagram-open,.viewer-bar button{font:inherit;font-size:.8rem;font-weight:600;padding:5px 10px;border-radius:8px;cursor:pointer;
+  color:#1a1f24;background:#ffffff;border:1px solid #c9d3db}
+.diagram-open:hover,.viewer-bar button:hover{border-color:#2ec4c0}
+.viewer{background:var(--diagram)}
+.viewer-bar{padding:10px 16px;background:var(--card);border-bottom:1px solid var(--line);color:var(--ink)}
+.viewer-bar button{color:var(--ink);background:var(--card);border-color:var(--line)}
+.viewer-title{font-weight:650}
+.viewer-pct{min-width:4ch;text-align:center;font-size:.85rem}
+.viewer-hint{flex-basis:100%;color:var(--muted);font-size:.78rem}
+.viewer-stage{padding:24px}
+
+/* outline of the open tab, under the steps */
+.toc{margin:22px 0 0;padding:16px 0 0 2px;border-top:1px solid var(--line)}
+.toc-title{margin:0 0 6px;color:var(--muted);font-size:.78rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+.toc a{display:block;padding:3px 8px;border-left:2px solid transparent;color:var(--muted);font-size:.85rem;line-height:1.35}
+.toc a:hover{color:var(--ink);text-decoration:none}
+.toc a[aria-current]{color:var(--ink);border-left-color:var(--teal);font-weight:600}
+.toc li.l1 > a{color:var(--ink);font-weight:550;margin-top:6px}
+.toc li.l1 > a[aria-current]{font-weight:650}
+.toc li.l2 > a{padding-left:20px}
+.toc li.l3 > a{padding-left:32px;font-size:.8rem;font-family:var(--mono)}
 :target:not(.panel){background:var(--teal-wash);border-radius:4px}
 .doc tr:has(> :target) > td{background:var(--teal-wash)}
 .idref{font-weight:550}
 .context-note{margin:20px 0 0;padding:10px 14px;border-radius:10px;background:var(--code);color:var(--muted);font-style:italic}
 footer{grid-column:2;margin:8px 0 40px;color:var(--muted);font-size:.84rem}
-@media print{body{background:#fff}.wrap{display:block}.tabs,.banner{display:none}.js .panel[hidden]{display:block}
-  .panel{border:none;box-shadow:none;padding:0}}
+@media print{body{background:#fff}.wrap{display:block}.tabs,.banner,.diagram-bar,.viewer{display:none}.js .panel[hidden]{display:block}
+  .panel{border:none;box-shadow:none;padding:0}.doc thead th{position:static}}
 </style></head>
 <body data-gate="stack">
 <div class="wrap">
@@ -1466,18 +1509,231 @@ Builds on: requirements.md (<a class="idref" href="#LD1">LD1</a>, <a class="idre
 </main>
 <footer>Generated from the markdown sources on 2026-10-17 19:12 — do not edit; regenerate instead; agents must consume the markdown, not this page. Diagrams are pre-rendered inline SVG; the page works offline.</footer>
 </div>
-<script>// design-review page behaviour: tabs, hash routing, links between ids. Inline it verbatim at the end of <body>.
+<script>// design-review page behaviour: tabs, hash routing, links between ids, the outline of the open tab, diagrams fitted to
+// the column with a full-size viewer, wide tables scrolled on their own. Inline it verbatim at the end of <body>.
 // Contract: tabs are <a class="tab" data-tab="KEY" href="#KEY">; panels are <section class="panel" data-tab="KEY">
-// with no id; <body data-gate="KEY"> names the gate tab; every defined id is an element with id="ID" inside its panel.
+// with no id; <body data-gate="KEY"> names the gate tab; every defined id is an element with id="ID" inside its panel;
+// diagrams are <figure class="diagram"> holding one <svg>.
 (function () {
   document.documentElement.classList.add("js");
-  var tabs = Array.prototype.slice.call(document.querySelectorAll(".tab[data-tab]"));
-  var panels = Array.prototype.slice.call(document.querySelectorAll(".panel[data-tab]"));
+  var slice = function (list) { return Array.prototype.slice.call(list); };
+  var tabs = slice(document.querySelectorAll(".tab[data-tab]"));
+  var panels = slice(document.querySelectorAll(".panel[data-tab]"));
   var gate = document.body.getAttribute("data-gate") || (panels[0] && panels[0].getAttribute("data-tab"));
+  var rail = document.querySelector("nav.tabs");
   var current = null;
   function panelOf(key) {
     for (var i = 0; i < panels.length; i++) if (panels[i].getAttribute("data-tab") === key) return panels[i];
     return null;
+  }
+  function el(tag, cls, text) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text) e.textContent = text;
+    return e;
+  }
+
+  // Outline: the open tab's headings under the step rail; h4s show only under the h3 being read.
+  var toc = el("div", "toc"), tocLinks = [], spy = null;
+  if (rail) rail.appendChild(toc);
+  function buildToc(panel) {
+    toc.innerHTML = "";
+    tocLinks = [];
+    if (spy) spy.disconnect();
+    var heads = slice(panel.querySelectorAll(".owed > h2, .doc h2, .doc h3, .doc h4"));
+    if (heads.length < 2) return;
+    toc.appendChild(el("p", "toc-title", "On this page"));
+    var list = el("ul"), parent = null, key = panel.getAttribute("data-tab");
+    heads.forEach(function (h, i) {
+      if (!h.id) h.id = "s-" + key + "-" + (i + 1);
+      var level = h.tagName === "H4" ? 3 : h.tagName === "H3" ? 2 : 1;
+      var li = el("li", "l" + level), a = el("a", null, h.textContent.trim());
+      a.href = "#" + h.id;
+      li.appendChild(a);
+      list.appendChild(li);
+      if (level === 2) parent = li;
+      if (level === 1) parent = null;
+      li.tocParent = level === 3 ? parent : null;
+      if (level === 3 && parent) parent.classList.add("has-sub");
+      a.tocHead = h;
+      tocLinks.push(a);
+    });
+    toc.appendChild(list);
+    if (!("IntersectionObserver" in window)) return;
+    spy = new IntersectionObserver(markReading, { rootMargin: "0px 0px -70% 0px" });
+    heads.forEach(function (h) { spy.observe(h); });
+    markReading();
+  }
+  // The heading being read is the last one whose top has passed the upper third of the viewport.
+  function markReading() {
+    var at = null, limit = window.innerHeight * 0.3;
+    tocLinks.forEach(function (a) { if (a.tocHead.getBoundingClientRect().top <= limit) at = a; });
+    if (!at) at = tocLinks[0];
+    var li = at && at.parentNode, open = li && (li.tocParent || (li.classList.contains("has-sub") ? li : null));
+    tocLinks.forEach(function (a) {
+      var item = a.parentNode;
+      if (a === at) a.setAttribute("aria-current", "location"); else a.removeAttribute("aria-current");
+      item.classList.toggle("open", item === open || item.tocParent === open);
+    });
+  }
+
+  // Wide tables scroll inside their own box, so the others keep a sticky header row.
+  function wrapWideTables(panel) {
+    slice(panel.querySelectorAll(".doc table")).forEach(function (t) {
+      if (t.parentNode.classList.contains("table-scroll") || t.scrollWidth <= t.parentNode.clientWidth + 1) return;
+      var box = el("div", "table-scroll");
+      t.parentNode.insertBefore(box, t);
+      box.appendChild(t);
+    });
+  }
+
+  // Diagrams fit the column; the bar says at what scale and opens the full-size viewer.
+  function naturalSize(svg) {
+    var vb = svg.viewBox && svg.viewBox.baseVal;
+    if (vb && vb.width) return { w: vb.width, h: vb.height };
+    return { w: parseFloat(svg.getAttribute("width")) || svg.getBoundingClientRect().width,
+      h: parseFloat(svg.getAttribute("height")) || svg.getBoundingClientRect().height };
+  }
+  function diagramTitle(fig) {
+    for (var e = fig.previousElementSibling; e; e = e.previousElementSibling) {
+      if (/^H[1-6]$/.test(e.tagName)) return e.textContent.trim();
+      var only = e.tagName === "P" && e.children.length === 1 && e.firstElementChild.tagName === "STRONG";
+      if (only && e.textContent.trim() === e.firstElementChild.textContent.trim()) return e.textContent.trim();
+    }
+    return "Diagram";
+  }
+  slice(document.querySelectorAll("figure.diagram")).forEach(function (fig) {
+    var bar = el("div", "diagram-bar"), scale = el("span", "diagram-scale"), open = el("button", "diagram-open", "Open full size");
+    open.type = "button";
+    open.addEventListener("click", function () { openViewer(fig, open); });
+    fig.addEventListener("click", function (ev) {
+      if (fig.classList.contains("scaled") && ev.target.closest("svg")) openViewer(fig, open);
+    });
+    bar.appendChild(scale);
+    bar.appendChild(open);
+    fig.appendChild(bar);
+  });
+  function measureDiagrams(panel) {
+    slice(panel.querySelectorAll("figure.diagram")).forEach(function (fig) {
+      var svg = fig.querySelector(":scope > svg"), scale = fig.querySelector(".diagram-scale");
+      if (!svg || !scale) return;
+      var shown = svg.getBoundingClientRect().width, ratio = shown / naturalSize(svg).w;
+      var scaled = shown > 0 && ratio < 0.98;
+      fig.classList.toggle("scaled", scaled);
+      scale.textContent = scaled ? "Shown at " + Math.round(ratio * 100) + "% · click to open full size" : "";
+    });
+  }
+
+  var viewer = el("div", "viewer"), vTitle = el("p", "viewer-title"), vStage = el("div", "viewer-stage"), vPct = el("output", "viewer-pct");
+  var vBar = el("div", "viewer-bar"), vFig = null, vSvg = null, vNext = null, vOpener = null, zoom = 1, size = null;
+  viewer.hidden = true;
+  viewer.setAttribute("role", "dialog");
+  viewer.setAttribute("aria-modal", "true");
+  vTitle.id = "viewer-title";
+  viewer.setAttribute("aria-labelledby", vTitle.id);
+  vStage.tabIndex = 0;
+  vBar.appendChild(vTitle);
+  [["out", "−", "Zoom out"], ["pct"], ["in", "+", "Zoom in"], ["fit", "Fit", "Fit to screen"], ["one", "1:1", "Actual size"],
+    ["close", "Close ✕", "Close"]].forEach(function (b) {
+    if (b[0] === "pct") { vBar.appendChild(vPct); return; }
+    var btn = el("button", "viewer-" + b[0], b[1]);
+    btn.type = "button";
+    btn.setAttribute("aria-label", b[2]);
+    btn.setAttribute("data-act", b[0]);
+    vBar.appendChild(btn);
+  });
+  vBar.appendChild(el("span", "viewer-hint", "Drag to pan · Ctrl + wheel to zoom · Esc to close"));
+  viewer.appendChild(vBar);
+  viewer.appendChild(vStage);
+  document.body.appendChild(viewer);
+
+  function fitZoom() {
+    return Math.min(1, (vStage.clientWidth - 48) / size.w, (vStage.clientHeight - 48) / size.h);
+  }
+  // Keeps the stage point (cx, cy) still while the scale changes.
+  function setZoom(z, cx, cy) {
+    z = Math.max(0.05, Math.min(4, z));
+    if (cx === undefined) { cx = vStage.clientWidth / 2; cy = vStage.clientHeight / 2; }
+    var px = (vStage.scrollLeft + cx) / zoom, py = (vStage.scrollTop + cy) / zoom;
+    zoom = z;
+    vSvg.style.width = size.w * z + "px";
+    vSvg.style.height = size.h * z + "px";
+    vStage.scrollLeft = px * z - cx;
+    vStage.scrollTop = py * z - cy;
+    vPct.textContent = Math.round(z * 100) + "%";
+  }
+  function openViewer(fig, opener) {
+    var svg = fig.querySelector(":scope > svg");
+    if (!svg || vSvg) return;
+    vFig = fig; vSvg = svg; vNext = svg.nextSibling; vOpener = opener; size = naturalSize(svg);
+    fig.style.minHeight = fig.offsetHeight + "px";
+    vTitle.textContent = diagramTitle(fig);
+    vStage.appendChild(svg);
+    viewer.hidden = false;
+    document.documentElement.classList.add("viewing");
+    zoom = 1;
+    setZoom(1, 0, 0);
+    vStage.scrollLeft = 0;
+    vStage.scrollTop = 0;
+    vStage.focus();
+  }
+  function closeViewer() {
+    if (!vSvg) return;
+    vSvg.style.width = vSvg.style.height = "";
+    vFig.insertBefore(vSvg, vNext);
+    vFig.style.minHeight = "";
+    viewer.hidden = true;
+    document.documentElement.classList.remove("viewing");
+    vSvg = null;
+    if (vOpener) vOpener.focus();
+  }
+  vBar.addEventListener("click", function (ev) {
+    var act = ev.target.getAttribute && ev.target.getAttribute("data-act");
+    if (act === "close") closeViewer();
+    else if (act === "in") setZoom(zoom * 1.25);
+    else if (act === "out") setZoom(zoom / 1.25);
+    else if (act === "fit") setZoom(fitZoom());
+    else if (act === "one") setZoom(1);
+  });
+  viewer.addEventListener("keydown", function (ev) {
+    if (ev.key === "Escape") closeViewer();
+    else if (ev.key === "+" || ev.key === "=") setZoom(zoom * 1.25);
+    else if (ev.key === "-") setZoom(zoom / 1.25);
+    else if (ev.key === "0") setZoom(fitZoom());
+    else if (ev.key === "1") setZoom(1);
+    else if (ev.key === "Tab") {
+      var stops = slice(viewer.querySelectorAll("button")).concat([vStage]);
+      var i = stops.indexOf(document.activeElement), next = ev.shiftKey ? i - 1 : i + 1;
+      stops[(next + stops.length) % stops.length].focus();
+    } else return;
+    ev.preventDefault();
+  });
+  vStage.addEventListener("wheel", function (ev) {
+    if (!ev.ctrlKey && !ev.metaKey) return;
+    ev.preventDefault();
+    var r = vStage.getBoundingClientRect();
+    setZoom(zoom * Math.exp(-ev.deltaY * 0.002), ev.clientX - r.left, ev.clientY - r.top);
+  }, { passive: false });
+  var drag = null;
+  vStage.addEventListener("pointerdown", function (ev) {
+    if (ev.button !== 0) return;
+    drag = { x: ev.clientX, y: ev.clientY, l: vStage.scrollLeft, t: vStage.scrollTop };
+    vStage.setPointerCapture(ev.pointerId);
+    vStage.classList.add("dragging");
+  });
+  vStage.addEventListener("pointermove", function (ev) {
+    if (!drag) return;
+    vStage.scrollLeft = drag.l - (ev.clientX - drag.x);
+    vStage.scrollTop = drag.t - (ev.clientY - drag.y);
+  });
+  function endDrag() { drag = null; vStage.classList.remove("dragging"); }
+  vStage.addEventListener("pointerup", endDrag);
+  vStage.addEventListener("pointercancel", endDrag);
+
+  // Layout-dependent work runs when a panel is first visible, and again on resize.
+  function lay(panel) {
+    wrapWideTables(panel);
+    measureDiagrams(panel);
   }
   function show(key) {
     if (!panelOf(key)) key = gate;
@@ -1488,6 +1744,10 @@ Builds on: requirements.md (<a class="idref" href="#LD1">LD1</a>, <a class="idre
     });
     var changed = key !== current;
     current = key;
+    if (changed) {
+      lay(panelOf(key));
+      buildToc(panelOf(key));
+    }
     return changed;
   }
   // A new tab starts at its top: if the reader is scrolled past it, bring the panel's top into view.
@@ -1498,6 +1758,7 @@ Builds on: requirements.md (<a class="idref" href="#LD1">LD1</a>, <a class="idre
     if (window.pageYOffset > top) window.scrollTo(0, top);
   }
   function route() {
+    closeViewer();
     var hash = decodeURIComponent(location.hash.slice(1));
     if (!hash) { if (show(gate)) toPanelTop(); return; }
     if (panelOf(hash)) { if (show(hash)) toPanelTop(); return; }
@@ -1508,6 +1769,11 @@ Builds on: requirements.md (<a class="idref" href="#LD1">LD1</a>, <a class="idre
     for (var d = target.closest("details"); d; d = d.parentElement && d.parentElement.closest("details")) d.open = true;
     target.scrollIntoView({ block: "start" });
   }
+  var resizing = null;
+  window.addEventListener("resize", function () {
+    clearTimeout(resizing);
+    resizing = setTimeout(function () { if (panelOf(current)) lay(panelOf(current)); }, 150);
+  });
   window.addEventListener("hashchange", route);
   route();
 })();
