@@ -95,7 +95,8 @@ open-source candidates, but don't dismiss a good paid option.
 
 ## What to ask the user
 
-Ask only what the architecture/data-design docs and the repo can't answer:
+Ask only what the requirements, `context.md`, the start sitting's
+answers, the architecture/data-design docs and the repo can't answer:
 
 - Cloud provider (or on-prem/local) and existing deployment platform — is
   there already a k8s cluster? Is serverless in use?

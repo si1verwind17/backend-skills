@@ -25,7 +25,8 @@ message, never in the header — "DRAFT (was APPROVED …; edited …)" or
 
 `Builds on:` names the upstream documents and the ids this one serves —
 never a status, a date or an open-item id, so an approval or a ruling
-upstream never edits this header.
+upstream never edits this header: `requirements.md (UC1–UC2, R1–R3)`, not
+`requirements.md (APPROVED 2026-08-14) — UC1–UC2, R1–R3, OI-1`.
 
 A document without a header (written before this convention) is treated
 as the user describes it; give it the full header — all three lines — the
@@ -46,7 +47,9 @@ on the run's branch — the changes are the diff since the approval's commit
 | Would change what an approved decision says | never made: an open item, the approved text in force (SKILL.md, Backtracking) |
 
 Approving the changes moves the document's stamp to the approval's date.
-The agent review checks the changes, its result in the commit message.
+The agent review checks every change set — the group that needs no
+approval included, since the review is what checks the grouping — its
+result in the commit message.
 
 `open-items.md`, `plan.md` and `context.md` are not approved documents:
 they carry a title and no `Status`, `Form` or `Builds on` lines.
@@ -84,20 +87,26 @@ design — `the change touching <area>`;
 never a person: the person is `Owner`. Write phases as `phase 0` … `phase 4`,
 not document names.
 
-Every question only the user can answer lives here and nowhere else.
-**The test: would the requirements' owner answer it from the business, or
-ask an engineer?** The first is a row; the second is a design choice, and
-the design phase decides it as an `agent` decision row (see Ids).
+Every question you cannot settle yourself lives here and nowhere else.
+**The test: can you settle it from the requirements, `context.md`, the
+approved documents and engineering judgment?** Then it is a design choice
+— the service split when the criteria agree, events, instance counts,
+auth mechanism, cache, figures like timeouts — decided as an `agent`
+decision row (see Ids), never a row here. A row is for the rest:
 
-- every assumption about what the business wants or what the environment
-  is — including a phase skill's elicitation or research record, and every
-  question a phase skill names as the user's — is a row with its
-  assumption in force, never a section of the phase's own document;
+- every assumption about what the business wants, what the environment
+  is, or what an outside system does (an integration's contract, which its
+  owner answers) — including a phase skill's elicitation or research
+  record, and every question a phase skill names as the user's — is a row
+  with its assumption in force, never a section of the phase's own
+  document; a fact `context.md` already records is not an assumption;
 - so is every hard-to-reverse unknown (SKILL.md, the start sitting), every
   requirement that doesn't make sense, can't be built as written, or hits
   a limitation, and every proposal to change an approved decision;
-- every agent-review finding queued for the user (not fixed before the
-  gate) is a row;
+- a review finding that needs the user — a judgment disagreement, a
+  change to an approved decision — is a row; a minor finding is fixed, or
+  named in the commit message with the phase that will fix it, never a
+  row;
 - a value written into a document as provisional ("proposed", "to
   confirm", "TBD", "assumed", a placeholder figure) — and any rule whose
   source is your own assumption — carries the id of its
@@ -142,7 +151,8 @@ Reviewer: agent dispatch | declared self-review (<reason>)
 ```
 
 `Run mode` reads `gated` until the user chooses. `State` is one of
-`later`, `to do`, `in design`, `awaiting approval` (an auto mode stopped
+`later` (a feature the input schedules for a later release only), `to do`
+(scheduled, not started), `in design`, `awaiting approval` (an auto mode stopped
 with its changes unapproved), `design approved`, `building`, `built`,
 `parked (OI-n)`. Update a chunk's state in the commit that changes it.
 

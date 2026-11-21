@@ -122,11 +122,12 @@ for data that rarely changes.
 Split by requirement, not by fashion: a POC or budget-constrained project
 is one service; an environment that already runs microservices (or a
 domain with clearly separate ownership, scaling, or blast radius) splits.
-**Ask the user when unsure** — and when the requirements left the split
-undecided, applying these criteria yields a *recommendation*, not a
-settled fact: record the split in the open questions with your
-recommendation, the assumption you proceeded on, and what would trigger
-revisiting it. Two hard rules regardless of split:
+When the criteria give one clear answer, decide the split as an `AD` row
+marked `agent`. When they pull both ways, or the requirements say the
+split is undecided, it is the user's question: applying these criteria
+yields a *recommendation*, not a settled fact — record the split in
+`open-items.md` with your recommendation, the assumption you proceeded on,
+and what would trigger revisiting it. Two hard rules regardless of split:
 
 - **Never share tables or a database between independently deployed
   services.** Coordination happens through APIs or events; a shared table
@@ -214,7 +215,8 @@ Walk these against your actual output files; fix, don't rationalize:
 - [ ] The header is present and exact; every business or environment
       ambiguity you resolved by assumption is a row in `open-items.md` —
       **including the service-split decision itself** whenever the
-      requirements didn't decide it — every design choice is a decision
+      criteria pull both ways or the requirements call it undecided —
+      every design choice is a decision
       row (`agent` or `user`), and every provisional value cites its row.
 - [ ] Every event payload field names its source in the data design.
 - [ ] Every event payload carrying personal data has a PII note in the

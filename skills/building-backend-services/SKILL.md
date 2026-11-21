@@ -24,7 +24,7 @@ phase skills, loaded one at a time.
 | 0 | Requirements intake | `writing-business-requirements` ([skills/writing-business-requirements/SKILL.md](../writing-business-requirements/SKILL.md)) | `requirements.md` | That skill's stop rule met: entities/lifecycles/write-paths derivable, integrations + criticality readable, environment known or asked, every unknown owned by a decider |
 | 1 | Data design | `backend-design-by-data` ([skills/backend-design-by-data/SKILL.md](../backend-design-by-data/SKILL.md)) | `data-design.md`, `data-dictionary.yaml`, `ddl/` | APPROVED; no blocking open item |
 | 2 | Architecture | `backend-architecture` ([skills/backend-architecture/SKILL.md](../backend-architecture/SKILL.md)) | `architecture-design.md` (+ conditional `openapi/`) | APPROVED; decisions table complete; event catalog approved |
-| 3 | Stack selection | `backend-stack-selection` ([skills/backend-stack-selection/SKILL.md](../backend-stack-selection/SKILL.md)) | `stack-selection.md` | APPROVED; stack selected by user; every version pinned |
+| 3 | Stack selection | `backend-stack-selection` ([skills/backend-stack-selection/SKILL.md](../backend-stack-selection/SKILL.md)) | `stack-selection.md` | APPROVED; stack within the constraint the requirements, `context.md` or the start sitting set; every version pinned |
 | 4 | Implementation | `backend-code-conventions` ([skills/backend-code-conventions/SKILL.md](../backend-code-conventions/SKILL.md)) + the stack-specific skill if one exists | Code + three-tier tests, one local commit per slice | Every slice approved; tests pass; conventions checklist clean |
 
 Why this order: the requirement tells you the entities (phase 1); the data's
@@ -123,7 +123,9 @@ read-only and runs on a strong model, so independence is built in; pass it
 the paths of the document, this skill, `documents.md` and the phase skill.
 Otherwise, if the environment lets you start another agent, start it — a non-interactive run is not a reason to
 skip the review: *not being able to ask the user* is different from *not
-being able to dispatch*.
+being able to dispatch*. Wait for the reviewer's result before going on —
+in the foreground, or by waiting on its notification: a run that ends its
+turn while its reviewer works has stopped mid-cycle, not at a gate.
 
 **Settle the reviewer channel once, then carry it.** Some environments gate
 agent dispatch behind the user's permission, or offer none. Ask once, when
@@ -266,12 +268,17 @@ not the run.
 review — is one message:
 
 - the size and, when split, the chunk plan, for the user to approve;
-- the hard-to-reverse unknowns the requirements leave open — the
-  deployment target, a constraint on the stack, the datastore family, paid
-  external services — each with your recommendation: an auto run never
-  decides these alone, because overruling one after the run is a rewrite;
-- the run modes that differ for this project, one recommended with one
-  line of why, and one short line of when an auto run would still stop
+- the hard-to-reverse unknowns that neither the requirements nor
+  `context.md` settle — the deployment target, a constraint on the stack,
+  the datastore family, paid external services — each with your
+  recommendation, never "decide later": an auto run never decides these
+  alone, because overruling one after the run is a rewrite. For the stack,
+  recommend the constraint — a language or platform, from the team and the
+  estate; phase 3 still selects the full stack within it;
+- the run modes that differ for this project — all four when split by
+  feature, three otherwise (for one chunk, auto until feature done is auto
+  until done) — one recommended with one line of why, and one short line
+  of when an auto run would still stop
   ("may stop early if a requirement can't be built as written, a blocking
   question parks every remaining chunk, or a step needs money, an external
   account, a push or a deploy");
@@ -299,21 +306,27 @@ stop.
   architecture, technical choices and technical figures — as a decision
   row marked `agent`, with one line of why; never as an open item;
 - **follows the requirements**: where one doesn't make sense, can't be
-  built as written, or hits a limitation, it opens an item and keeps the
-  requirement's text in force where it is workable; where it is not, that
-  chunk is parked. A reviewer's judgment disagreement is an item too, the
-  author's version in force;
+  built as written, or hits a limitation, it opens an item, marks what
+  depends on it `(contested — OI-n)` without redefining the requirement,
+  and designs the rest; it parks the chunk only when the chunk's core
+  depends on the item. A reviewer's judgment disagreement is an item too,
+  the author's version in force;
 - **parks a chunk** on a blocking item and continues with the chunks that
   do not depend on it; with none left, it stops;
 - **never** decides a hard-to-reverse unknown, changes an approved
   decision, pushes, merges, deploys, spends money or creates an external
   account;
 - **still runs the agent review** at every phase and slice — it stands in
-  for the user's gate, so it is never skipped.
+  for the user's gate, so it is never skipped — and **finishes each cycle
+  before the next starts**: review re-verified and committed, then the
+  next phase. It waits for its own reviewer; ending a turn while the
+  reviewer runs ends a non-interactive run, and is not a stop.
 
-**The stop's sitting** presents per chunk: the changes awaiting approval
-(the agent's decisions first), the open items (blocking first), the parked
-chunks and why — then the render question. The user approves changes,
+**The stop's sitting** is one message, per chunk: the blocking open items
+and the parked chunks with why; the changes awaiting approval, the agent's
+decisions first; the other open items — then, after auto until design
+done, the run mode for implementation, and last the render question. The
+user approves changes,
 rules on items, and may overrule an agent decision; an overrule is a
 change for the next run, through triage when code exists.
 
