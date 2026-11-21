@@ -168,8 +168,10 @@ it earns its toolchain weight there and nowhere else.
   (`order-unpaid`, `order-paid`, `order-completed`), even with no consumer
   yet: unconsumed messages simply expire per topic config, and the consumer
   that arrives a year later costs nothing to serve — retrofitting the
-  publish later costs a release and backfill. Confirm with the user; the
-  recommendation is to publish.
+  publish later costs a release and backfill. Whether to publish is a
+  design choice: decide it as an `agent` AD row, the user approving or
+  overruling it at the gate; only a broker the estate lacks, a paid
+  service, is the user's question.
 - **Payloads carry meaningful data, not bare ids** — consumers should act
   without calling back. Cautions that come with this default: every
   consumer couples to the payload shape, and sensitive fields (PII)
