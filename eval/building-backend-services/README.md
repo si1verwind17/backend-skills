@@ -18,6 +18,7 @@ Orchestration: the per-phase cycle and its gates, the shared document format, op
 
 ## Pending validation
 
+- `de54434` (with `7702bb9`) — `check_docs.py` in the self-check and at every gate, sizing and modes moved to `run-modes.md`, fixed shapes for the start and stop sittings, ruling rows without invented reasons, the review on every change set, a branch for every run. Validates on scenarios 7, 8 and 9 with Sonnet 4.6, then all scenarios with Sonnet.
 - `49c9f39` — fixes from the second round: every offered mode named, one chunk always gets three; a run mode written into a new `plan.md` is not a choice; one commit per phase cycle; the stop's sitting recommends the implementation mode; scenario 4 check 3 and scenario 9 checks 4 and 5 tightened. Validates on scenarios 2, 4 and 9 (skill arm), then 1 and 6 at the next demo run.
 - `6abb917` — a slice never changes an approved decision (not to match the code, not as a change for the re-approval to cover); the branch's first commit holds the approved design documents; under a waiver a blocking item passes the gate with the approved text in force. Validates on scenario 6 at the next demo run.
 
@@ -35,6 +36,9 @@ was evaluated.
 | 4 | 88f14b2 | skill (plugin) | 17/18 (3 runs) | Status line kept, R4 listed as awaiting approval, local branch 3/3; one run wrote `Run mode: gated` into its new plan.md and never asked; one run added an inferred rule (check since tightened) |
 | 5 | e8db71d | skill (plugin) | 10/10 (2 runs) | plan row stays first; every blocking fix re-verified until SUFFICIENT; no decision row on README/config alone in one run, one borderline row in the other; residual: plan written after reading, an edit after a SUFFICIENT ruling not sent back, the author's pass under-reported the README item (the reviewer caught it) |
 | 6 | 9bdae75 | skill (plugin) | 6/6 (1 run, checks 1–6; 7 and 8 added after it) | 291 tests re-run green from a fresh clone; every blocking fix re-verified until SUFFICIENT; review result in each slice commit; render offered; missed: approved decisions (W1, an API error code, SD10) rewritten in place during slices and re-approved under the waiver instead of an open item, requirements.md left uncommitted on the branch |
+| 2 | 88f14b2 | skill (plugin, Sonnet 4.6) | 23/27 (3 runs) | one chunk and three modes 3/3; the stack constraint answered "none" (2/3); review findings queued in the gate instead of open items (2/3) |
+| 7 | 88f14b2 | skill (plugin, Sonnet 4.6) | 13/21 (3 runs) | features merged into chunks (2/3); the foundation over budget or missing companies; the size or the language unknown dropped from the start sitting; three modes instead of four once |
+| 8 | 88f14b2 | skill (plugin, Sonnet 4.6) | 15/21 (3 runs) | no flip and write-downs filed right 3/3; no agent review of the change set (0/3); committed on main (2/3); closed open-item ids kept as provenance; invented reasons in ruling rows |
 | 7 | 88f14b2 | skill (plugin) | 20/21 (3 runs) | split, foundation, later features, `CORE-` ids, recommended unknowns 3/3; one run named only its recommended mode |
 | 8 | 88f14b2 | skill (plugin) | 21/21 (3 runs) | `Builds on:` cleaned and an agent review of the change set in every run; one run filed a redrawn diagram as needing no approval |
 | 9 | 88f14b2 | skill (plugin) | 21/24 (3 runs) | two runs 8/8; one committed every draft and fix round, filed minor findings as rows, and asked the render question before the mode |
