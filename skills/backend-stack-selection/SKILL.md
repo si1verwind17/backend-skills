@@ -23,10 +23,10 @@ web check — never answered from this skill's or the model's memory.**
 unless the user specifies otherwise, opening with the shared header and
 using the shared ids (`documents.md` in the `building-backend-services` skill folder, beside
 this skill's folder: [../building-backend-services/documents.md](../building-backend-services/documents.md) — to find it, take the folder this SKILL.md is in, go up one level, then into `building-backend-services/`, not relative to your working directory). Every question
-you would ask the user and every assumption you proceed on is a row in
-`open-items.md`, never a section of this document. The decisions are `SD`
-rows (decision, why, the alternative it beat, the ids it serves); pins are
-listed without ids.
+you would ask the user and every assumption about the team, the estate or
+the budget you proceed on is a row in `open-items.md`, never a section of
+this document. The decisions are `SD` rows (decision, who made it, why, the
+alternative it beat, the ids it serves); pins are listed without ids.
 
 The header and the open-items format, in short:
 

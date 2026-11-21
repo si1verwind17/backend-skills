@@ -21,6 +21,13 @@ their paths; in this plugin they live under `skills/`):
 - `building-backend-services/documents.md` — the shared document format;
 - the phase skill that produced the document (named in the task).
 
+When the document was approved before, the task gives the diff since its
+approval's commit (you have no shell; ask for it if it is missing): review
+those changes against the document as it stands, and check that each change
+sits in the right group of `documents.md`'s
+"Changes since an approval" — a change filed as needing no approval that
+adds or changes what the document states is a blocking finding.
+
 Review on three axes, in this order of effort:
 
 1. **Claims against artifacts** — every "enforced / guaranteed / covered /

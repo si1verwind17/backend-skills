@@ -26,7 +26,9 @@ reasoning and the next agent can implement without re-deriving anything.
 Every document opens with the shared header and uses the shared ids
 (`documents.md` in the `building-backend-services` skill folder, beside
 this skill's folder: [../building-backend-services/documents.md](../building-backend-services/documents.md) — to find it, take the folder this SKILL.md is in, go up one level, then into `building-backend-services/`, not relative to your working directory); every open
-question and assumption is a row in `open-items.md`, never a section here.
+question and every assumption about the business or the environment is a
+row in `open-items.md`, never a section here; a choice the requirements
+leave to design is a decision row marked `agent`.
 
 The header and the open-items format, in short:
 
@@ -68,8 +70,9 @@ Decide by | Owner | Recommendation | Assumption in force |` — `Blocks` and
      idempotency mechanism, its atomicity mechanism, and its queue
      decision. This is the section an implementing agent consumes directly.
    - **Index / key plan** — each index beside the access pattern it serves.
-   - **Decisions** — `DD` rows: the decision, why (one line), the
-     alternative it beat (one line), the ids it serves.
+   - **Decisions** — `DD` rows: the decision, who made it (`user` or
+     `agent`), why (one line), the alternative it beat (one line), the ids
+     it serves.
    - **Schema evolution** notes.
 2. **`data-dictionary.yaml`** — the authored source of field definitions
    (`entities: <name>: {description, fields: <field>: {type,
@@ -342,9 +345,10 @@ free id, nothing is renumbered — the document shows the current state.
 
 Walk these checks against your actual output files; fix, don't rationalize:
 
-- [ ] The header is present and exact; every open question and assumption
-      is a row in `open-items.md`, and every provisional value in the
-      document cites its row.
+- [ ] The header is present and exact; every open question and every
+      business or environment assumption is a row in `open-items.md`,
+      every design choice is a decision row (`agent` or `user`), and every
+      provisional value in the document cites its row.
 - [ ] The logical model and access-pattern table come first, with neutral
       types, and nothing above the engine-family row names an engine; the
       engine family is a `DD` row with the three inputs.

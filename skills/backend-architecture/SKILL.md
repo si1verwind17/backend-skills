@@ -26,8 +26,10 @@ Delivered under **`docs/backend-design/`** (beside the data design) unless
 the user specifies otherwise. Every document opens with the shared header
 and uses the shared ids (`documents.md` in the `building-backend-services` skill folder, beside
 this skill's folder: [../building-backend-services/documents.md](../building-backend-services/documents.md) — to find it, take the folder this SKILL.md is in, go up one level, then into `building-backend-services/`, not relative to your working directory); every open
-question and assumption — the service split, cache tolerance, sync/async
-choices — is a row in `open-items.md`, never a section here.
+question and every assumption about the business or the environment —
+the service split when the requirements leave it open, cache staleness the
+business must tolerate — is a row in `open-items.md`, never a section here;
+a choice the requirements leave to design is a decision row marked `agent`.
 
 The header and the open-items format, in short:
 
@@ -49,8 +51,9 @@ Decide by | Owner | Recommendation | Assumption in force |` — `Blocks` and
      Mermaid builds parse it as a statement separator and fail the whole
      diagram even where the latest build tolerates it); use `<br/>` or
      dashes to separate clauses;
-   - A **decisions table** — `AD` rows, each with why (one line), the
-     alternative it beat (one line) and the ids it serves; per service:
+   - A **decisions table** — `AD` rows, each with who made it (`user` or
+     `agent`), why (one line), the alternative it beat (one line) and the
+     ids it serves; per service:
      stateless/stateful, cache (yes/no + staleness bound), deployment
      target (serverless/k8s + cold-start note); per interaction (`I1`,
      `I2`, …): sync or async, protocol, and **failure path** — what retries this hop (the structural mechanism:
@@ -208,10 +211,11 @@ Walk these against your actual output files; fix, don't rationalize:
 - [ ] Every core entity's business-state transitions appear in the event
       catalog — including ones with no current consumer.
 - [ ] No two services share a table or database anywhere in the design.
-- [ ] The header is present and exact; every ambiguity you resolved by
-      assumption is a row in `open-items.md` — **including the
-      service-split decision itself** whenever the requirements didn't
-      decide it — and every provisional value cites its row.
+- [ ] The header is present and exact; every business or environment
+      ambiguity you resolved by assumption is a row in `open-items.md` —
+      **including the service-split decision itself** whenever the
+      requirements didn't decide it — every design choice is a decision
+      row (`agent` or `user`), and every provisional value cites its row.
 - [ ] Every event payload field names its source in the data design.
 - [ ] Every event payload carrying personal data has a PII note in the
       event catalog.

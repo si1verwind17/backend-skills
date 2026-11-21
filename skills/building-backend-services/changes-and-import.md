@@ -18,8 +18,11 @@ change touches:
 | none of these (a bug fix, a refactor) | phase 4 directly; the slice's review checks that no contract changed |
 
 From its entry phase, a change runs every downstream phase it actually
-touches and skips the rest; each phase it runs goes through the full cycle
-and gate. **A change adds only what the request states.** The rules and use
+touches and skips the rest; each phase it runs goes through the full cycle,
+and its gates follow the run mode `plan.md` records (none recorded: the
+change's first gate asks it). Edits to approved documents are changes
+since their approval (documents.md) — the documents keep `APPROVED`.
+**A change adds only what the request states.** The rules and use
 cases it adds are the ones the requester asked for; everything you infer
 around them — edge cases, mechanisms, defaults — is an open item with an
 assumption in force, never a new rule. The request is the source; your
@@ -92,7 +95,8 @@ changes no code.
   reviewer with the documents.
 - **The import's gate** asks the user to approve the documents **as they
   stand** (all four, with the open items), names it "import", not a step
-  count, and says that changes enter through triage afterwards.
+  count, says that changes enter through triage afterwards, and asks the
+  run mode later changes use (recorded in `plan.md`).
 - **No refactor on import.** The repository's conventions and warts go into
   `context.md`. New code follows the skill rules except at a boundary with
   existing code; cleaning up existing code is a change of its own.

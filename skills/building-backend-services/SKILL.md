@@ -31,19 +31,22 @@ Why this order: the requirement tells you the entities (phase 1); the data's
 shape and write paths tell you state, scaling, and boundaries (phase 2); the
 architecture's deployment targets and interaction styles constrain the stack
 (phase 3); and implementation starts only when nothing upstream is ambiguous
-(phase 4).
+(phase 4). A project too large for one requirements document runs this
+chain once per chunk — see Size, chunks and the run mode.
 
 Shared across all phases and owned by this skill: the document header, the
-ids, `open-items.md`, and the two document forms — see
-[documents.md](documents.md). Each phase skill defines its own document's content.
+ids, `open-items.md`, `plan.md`, how changes to approved documents are
+approved, and the two document forms — see [documents.md](documents.md).
+Each phase skill defines its own document's content.
 
 ## Every phase runs the same cycle
 
 **Draft → self-check → agent review → open items → user gate.** Never run
 ahead of an unreviewed deliverable.
 
-1. **Draft** — the phase skill writes or updates its document, header
-   `Status: DRAFT`.
+1. **Draft** — the phase skill writes or updates its document. A new
+   document reads `Status: DRAFT`; an approved one keeps its Status line,
+   and the edit is a change since its approval (see documents.md).
 2. **Self-check** — the phase skill's own checklist, the consistency pass
    (below), and the size check (see The documents).
 3. **Agent review** — an independent reviewer (below), given your
@@ -53,19 +56,24 @@ ahead of an unreviewed deliverable.
    ruled INSUFFICIENT is repaired and sent back again. A reviewer's
    suggestion is checked against your own rules before you apply it — in
    a change, it adds only what the request asked; anything more is an open
-   item;
-   header becomes `Status: REVIEWED` only after that re-verification (or
-   straight away when the review found nothing blocking). A gate
+   item.
+   A never-approved document's header becomes `Status: REVIEWED` only
+   after that re-verification (or straight away when the review found
+   nothing blocking). A gate
    presentation that says "re-verification not run" while dispatch was
    available is an unfinished cycle — run it, then present.
 4. **Open items** — every question the phase leaves, and every review
-   finding queued for the user, goes into `open-items.md`.
-5. **User gate** — the user approves the document (header becomes
-   `Status: APPROVED · <date> · approved by <name>`) or sends it back, and
-   rules on open items. Approval and rulings are two separate outcomes of
-   the same sitting. A **blocking** open item must be decided before its
-   phase's gate passes; a non-blocking one may carry forward, naming the
-   phase that must decide it.
+   finding queued for the user, goes into `open-items.md`. Commit the
+   phase's work on the run's branch, the review's result in the message.
+5. **User gate** — the user approves the deliverable — a new document, or
+   the changes since a document's last approval — or sends it back, and
+   rules on open items. Approving a new document sets its header to
+   `Status: APPROVED · <date> · approved by <name>`; approving changes
+   moves the stamp to the new date. Writing a ruling down is not a new
+   change to approve: the ruling approved it. A **blocking** open item
+   must be decided before its phase's gate passes; a non-blocking one may
+   carry forward, naming the phase that must decide it. In an auto mode,
+   gates pass on their own until the mode's stop (see Run modes).
 
 Phase 4 runs this cycle **per slice** — see Phase 4 below.
 
@@ -80,7 +88,8 @@ covered" statement in the document is checked in the artifact it points
 at (DDL, diagram, table, pin list), with evidence cited per finding.
 Authors verify presence; only an independent reader verifies truth.
 Give the reviewer **absolute paths** — to the documents, to this skill and
-to the phase skill it reviews against — and your consistency-pass list.
+to the phase skill it reviews against — your consistency-pass list, and,
+for a document approved before, the diff since its approval's commit.
 The reviewer must be **at least as capable as the phase author, and
 preferably the strongest agent available — never a weaker one** (a
 weaker reviewer rubber-stamps whatever reads plausibly, and a same-tier
@@ -118,8 +127,8 @@ being able to dispatch*.
 
 **Settle the reviewer channel once, then carry it.** Some environments gate
 agent dispatch behind the user's permission, or offer none. Ask once, when
-the first phase review comes due, and record the ruling with that phase's
-deliverable — re-asking at every gate is friction that trains the user to
+the first phase review comes due, and record the ruling in `plan.md` —
+re-asking at every gate is friction that trains the user to
 wave the review through. Where dispatch is unavailable the review still
 happens, as a **declared self-review**: the author re-reads the deliverable
 as written — never from memory of what was meant — lists every "enforced /
@@ -148,7 +157,9 @@ back to the reviewer before the header says REVIEWED.
 
 **Gate presentation is glanceable, then you stop.** One short message:
 which phase completed, where the deliverable lives, the review findings
-with their dispositions, and the open items awaiting the user as one-liners
+with their dispositions, the changes since each approved document's last
+approval in two groups — awaiting approval, then the ones that need none
+(documents.md) — and the open items awaiting the user as one-liners
 (blocking first) — depth lives in the documents, not the message. End it
 by **asking whether to render the review page and open it** with
 `rendering-design-docs`
@@ -161,11 +172,13 @@ remind, or auto-proceed on silence; an unattended run simply ends at the
 gate and resumes later (see Resuming mid-chain).
 
 A gate is passed by exactly two things: **the user approving that specific
-deliverable**, or **the user explicitly waiving review gates** ("skip the
-reviews, proceed to the end"). Nothing else counts — not a non-interactive
-"state your assumption and proceed", not "build it all, don't bother me",
-not "keep going while I'm away", not running in an autonomous/CI mode with
-nobody to ask. Ambient permissions like these license *gate-safe* work —
+deliverable**, or **an auto mode the user chose** (see Run modes), up to
+that mode's stop. "Skip the reviews, proceed to the end", said before the
+start sitting, is auto until done chosen in advance. Nothing else counts —
+not a non-interactive "state your assumption and proceed", not "build it
+all, don't bother me", not "keep going while I'm away", not running in an
+autonomous/CI mode with nobody to ask; until the user chooses a mode, the
+run is gated. Ambient permissions like these license *gate-safe* work —
 fixing inconsistencies, completing the draft, preparing the gate
 presentation — never the gate itself. At an unreviewed gate: prepare,
 present, and **stop**; in a truly non-interactive run, the gate
@@ -177,23 +190,26 @@ that mean stop: "the draft is basically done", "I recorded the question so
 I can proceed", "nobody can approve anyway", "I'll implement now and they
 can review both together".
 
-**Design phases do not commit.** Phases 0–3 leave their edits in the
-working tree for the user to review at the gate; commit only when the user
-asks. Commits start in phase 4, on its branch.
+**Every run works on a local branch.** Before the run's first commit,
+create a branch in the user's repository (`backend/<service>`, or
+`backend/<change-slug>` for a change); each phase cycle and each slice
+commits there, so the changes since an approval are the diff since its
+commit. **Never push, merge, or open a pull request unless the user
+explicitly asks** — the user's review is reading the branch locally.
 
-**A waiver passes gates, never rulings.** Under "skip the reviews", each
-phase's cycle still runs and its gate counts as approved, but open items
-still wait for the user, approved decisions stay protected, and the final
-output still ends with the render question. "Protected" means: an approved
+**An auto mode passes gates, never rulings.** In an auto mode each phase's
+cycle still runs and its gate counts as passed, but open items still wait
+for the user, approved decisions stay protected, and the stop's sitting
+still ends with the render question. "Protected" means: an approved
 decision a later phase finds wrong stays as written and in force, and its
-replacement is a proposal in an open item that blocks — a waiver approves
-gates, it never rules on a decision. Under a waiver a blocking item does not
-stop the run: the gate passes with the approved text still in force, and the
-final reply lists that item first.
+replacement is a proposal in an open item that blocks — an auto mode passes
+gates, it never rules on a decision. In an auto mode a blocking item of this
+kind does not stop the run: the gate passes with the approved text still in
+force, and the stop's sitting lists that item first.
 
-Every phase has its own gate by default. The user may combine gates for a
-project (for example data and architecture together); the cycle still runs
-per phase, and the combined gate presents each phase's results.
+In gated mode every phase has its own gate by default. The user may combine
+gates for a project (for example data and architecture together); the cycle
+still runs per phase, and the combined gate presents each phase's results.
 
 ## The documents
 
@@ -201,9 +217,10 @@ Every document under `docs/backend-design/` shares one format, defined in
 [documents.md](documents.md) — **read it before writing or editing any
 document**: the header (`Status: DRAFT | REVIEWED | APPROVED`, `Form:
 design | built`, `Builds on:`), the ids (`UC R NF LD`, `E W DD`, `I EV AD`,
-`SD`, `OI`), `open-items.md` as the only home of an open question, the two
-forms, the size check, and the files that stay local (`changes/`,
-`design-review.html`, excluded through `.git/info/exclude`).
+`SD`, `OI`), changes since an approval, `open-items.md` as the only home of
+an open question, `plan.md`, the two forms, the size check and the split
+per area, and the files that stay local (`changes/`, `design-review.html`,
+excluded through `.git/info/exclude`).
 
 ## Phase 0 — requirements intake
 
@@ -212,7 +229,93 @@ existing PRD) into the uniform `requirements.md` — locked decisions,
 use cases with acceptance criteria, testable rules, non-functionals, and
 open items each owned by a decider. Its stop rule defines this
 phase's exit; its locked decisions become the first approved
-baseline that the backtracking rule below protects.
+baseline that the backtracking rule below protects. Phase 0's gate is
+the start sitting, below.
+
+## Size, chunks and the run mode
+
+**Size the project during phase 0**, with one test for every project: do
+the requirements for what is built now fit one requirements document's
+budget (about 2,500 words, set by `writing-business-requirements`)?
+
+| Size | Shape |
+|---|---|
+| Small — a POC, one capability, a handful of entities | one chunk; the three design deliverables may collapse into one shorter document (keeping every section: entities/DDL, decisions, event catalog, stack pins), and the gates may batch into one |
+| Fits the budget | one chunk, the four documents |
+| Does not fit | split by feature, below |
+
+A small project compresses phases, never skips their *content*.
+
+**Splitting by feature.** Read the whole input once, only to write the
+feature map into `plan.md`: every feature the input names, scheduled now or
+later, and the order between them. What every feature needs — identity,
+access, audit, a shared write pattern, notifications, whatever the input
+makes cross-cutting — is the **foundation** chunk: phase 0 writes the
+foundation's requirements and the map, and the foundation runs the whole
+chain first, stack selection included. Then each scheduled feature is a
+chunk, in the map's order: phase 0 for its area (the input's sections for
+that feature), then phases 1, 2 and 4 — phase 3 only when it needs a
+library or runtime the stack lacks. A feature scheduled for later is
+listed in the map and designed when its turn comes, never modelled ahead.
+Every entity has one owning area; other areas reference it. The documents
+split the same way (documents.md, Size check), so a change loads only the
+areas it touches, and a question that blocks one feature parks that chunk,
+not the run.
+
+**The start sitting** — the gate of the run's first phase 0, after its
+review — is one message:
+
+- the size and, when split, the chunk plan, for the user to approve;
+- the hard-to-reverse unknowns the requirements leave open — the
+  deployment target, a constraint on the stack, the datastore family, paid
+  external services — each with your recommendation: an auto run never
+  decides these alone, because overruling one after the run is a rewrite;
+- the run modes that differ for this project, one recommended with one
+  line of why, and one short line of when an auto run would still stop
+  ("may stop early if a requirement can't be built as written, a blocking
+  question parks every remaining chunk, or a step needs money, an external
+  account, a push or a deploy");
+- the render question.
+
+Then stop. Record the size, the chunks and the chosen mode in `plan.md`;
+the user may change the mode at any later stop. When the user chose a mode
+before the start sitting ("skip the reviews, proceed to the end"), the run
+does not stop here: each hard-to-reverse unknown becomes an open item with
+your recommendation as the assumption in force, listed first at the mode's
+stop.
+
+## Run modes
+
+| Mode | Stops | Recommend when |
+|---|---|---|
+| Gated | at every phase gate of every chunk — the default until the user chooses | high stakes (money, compliance), or the user wants to shape the design |
+| Auto until design done | after the last design phase of every scheduled chunk, before any code; that sitting asks the mode for implementation | the requirements are new or uncertain |
+| Auto until feature done | after each chunk's last slice — offered only with two chunks or more | a project split by feature |
+| Auto until done | after the last chunk | a small project |
+
+**Between its stops, an auto run:**
+
+- **decides** every choice the requirements leave to design — data,
+  architecture, technical choices and technical figures — as a decision
+  row marked `agent`, with one line of why; never as an open item;
+- **follows the requirements**: where one doesn't make sense, can't be
+  built as written, or hits a limitation, it opens an item and keeps the
+  requirement's text in force where it is workable; where it is not, that
+  chunk is parked. A reviewer's judgment disagreement is an item too, the
+  author's version in force;
+- **parks a chunk** on a blocking item and continues with the chunks that
+  do not depend on it; with none left, it stops;
+- **never** decides a hard-to-reverse unknown, changes an approved
+  decision, pushes, merges, deploys, spends money or creates an external
+  account;
+- **still runs the agent review** at every phase and slice — it stands in
+  for the user's gate, so it is never skipped.
+
+**The stop's sitting** presents per chunk: the changes awaiting approval
+(the agent's decisions first), the open items (blocking first), the parked
+chunks and why — then the render question. The user approves changes,
+rules on items, and may overrule an agent decision; an overrule is a
+change for the next run, through triage when code exists.
 
 ## External context intake (conditional)
 
@@ -266,22 +369,21 @@ carries no approval status.
 
 ## Phase 4 — implementation, one slice at a time
 
-**Work on a local branch.** Before the first slice, create a branch for the
-implementation (or for the change) in the user's repository, and make its
-first commit the design documents as approved (`open-items.md` included),
-so the branch carries what the slices build on. **Never push
-and never open a pull request unless the user explicitly asks** — the
-user's review is reading the branch locally.
+**The slices build on the approved design.** Implementation continues on
+the run's local branch (see The gate); before the first slice, the design
+documents as approved (`open-items.md` included) are committed there, so
+the branch carries what the slices build on.
 
 **Each slice runs the cycle:** plan the slice → implement it with the
 conventions and tests → the code review below → **one local commit** →
 the user reviews that commit at the slice's gate. Documents the slice
 changes (a decision or write path it adds, a gap it fills, the switch to
-`Form: built`) are updated in the same commit as the code, and an APPROVED
-document it edits reads `Status: DRAFT` in that same commit; approving the
-slice re-approves the documents it changed. A slice never changes what an
+`Form: built`) are updated in the same commit as the code; their Status
+lines stay as they are — the edits are changes since approval, and
+approving the slice approves them (in an auto mode they wait, with the
+slice, for the stop's sitting). A slice never changes what an
 approved document already decides — not to match the code, not as a change
-listed for the user's re-approval to cover: when the code and an approved
+listed for the slice's approval to cover: when the code and an approved
 decision disagree, the code is fixed, or the decision has proved wrong and
 the rule below applies. Switch each document to `Form: built` in the slice
 that makes its physical part real (the data design with the first
@@ -296,7 +398,8 @@ that does not hold), it is not a gap to backtrack on: the approved text
 stays as written and in force, the design and the code keep following it —
 mitigate within it if you can — and the defect, with its evidence and your
 proposed change, is an open item that **blocks the next gate** (the phase's
-or the slice's). A proposed fix that contradicts the decision
+or the slice's; in an auto mode, the stop's sitting lists it first). A
+proposed fix that contradicts the decision
 is never shipped before the user rules; if you prepare it, it goes in a
 commit of its own, not mixed into a slice.
 
@@ -327,12 +430,14 @@ scope compression — 5 for a full chain, counting phases already approved
 when resuming — or, for a change, the number of phases its triage runs:
 a change entering at phase 0 that runs phases 0, 1, 2 and 4 is `step k/4`),
 so the environment's task list shows
-both the current step and how many remain. Gate presentations end the same
+both the current step and how many remain; in a project split by feature,
+name the chunk too — `<project> — <chunk> — step <k>/<total>: <skill-name>`,
+the total counting that chunk's phases. Gate presentations end the same
 way: "next: step <k+1>/<total> — <skill>" so the user always knows what
 approval unlocks. This matches the architecture: the documents are the
 interface between phases, each phase re-reads them, and gates sit
 naturally at worker boundaries. A single agent running several phases
-under a gate waiver cannot surface per-phase task lines — it should emit a
+in an auto mode cannot surface per-phase task lines — it should emit a
 one-line phase-start marker as it enters each phase instead.
 
 **Local-only files do not travel.** A worker in its own git worktree or
@@ -408,14 +513,6 @@ count:
 - **Adding a service to an existing estate**: a new sibling directory
   matching the estate's convention — never a parallel layout.
 
-## Scope compression for small projects
-
-A POC or deliberately small service doesn't skip phases — it compresses
-them: the three design deliverables may collapse into one shorter document
-(keeping every section: entities/DDL, decisions, event catalog, stack
-pins), and the review gates may batch into one. Ask the user which weight
-they want; never silently skip a phase's *content*.
-
 ## The consistency pass — before any new work
 
 The chain is only as good as its seams. Run this pass **as the first
@@ -441,8 +538,11 @@ about to work on is not this pass:
       cache client, crypto) has a pinned version in `stack-selection.md`.
 - [ ] Every open question is in `open-items.md` and nowhere else; an item
       the user has ruled on is gone from it and present as a decision row.
-- [ ] Every document's `Status` matches reality: nothing edited since
-      approval still reads APPROVED.
+- [ ] Every change since a document's last approval is listed for the
+      next gate or stop, in its group (awaiting approval, or needing none);
+      no `Builds on:` line carries a date, a status or an open-item id.
+- [ ] When split by feature: every entity has one owning area, and the
+      chunk states in `plan.md` match the documents.
 - [ ] After an import: no decision row (`AD`, `SD`, `DD`) or rule rests
       only on a README or a config default — that is configuration, and it
       goes to `context.md`.
@@ -454,17 +554,17 @@ about to work on is not this pass:
 
 A later phase often exposes an earlier phase's gap (architecture reveals a
 missing table; stack selection reveals a client library that changes an
-interaction choice). When that happens, **update the earlier document**
-(it returns to DRAFT), list the change in the gate presentation, and
-continue — never leave two documents disagreeing.
+interaction choice). When that happens, **update the earlier document**,
+list the change at the next gate or stop, and continue — never leave two
+documents disagreeing.
 
 **A gap is fixed, even in an APPROVED document.** A gap is a document
 failing to say what the approved artifacts already say: a column the
 approved DDL and ER diagram have but the dictionary lacks, an id cited but
 never defined, a pin the architecture requires but the stack omits. Fixing
-it changes no decision, so do it: the document returns to DRAFT and the
-fix is listed at the next gate — that visible return to DRAFT is the
-intended cost, never a reason to leave two documents disagreeing.
+it changes no decision, so do it: it needs no approval, and it is listed
+at the next gate or stop among the changes that need none — never a reason
+to leave two documents disagreeing.
 
 **A decision is asked, never amended.** When resolving a disagreement would
 change what an approved document *decides* — drop a field from an approved
@@ -489,17 +589,21 @@ question without new information.
 
 ## Resuming mid-chain
 
-When some documents already exist: read them all first, run the consistency
-pass on what's present, report gaps, and enter the chain at the first phase
-whose deliverable is missing or not APPROVED — don't redo approved phases.
+When some documents already exist: read `plan.md` and them all first, run
+the consistency pass on what's present, report gaps, and enter the chain at
+the first chunk and phase whose deliverable is missing or not APPROVED —
+don't redo approved phases — in the mode `plan.md` records. Without a
+`plan.md`, size what exists, write one, and ask the mode at the next gate;
+until then the run is gated.
 
 ## Changes, and existing repositories
 
 When the task is a change to a service already built this way — a feature,
 a fix, a refactor — or bringing in a repository that has no documents yet,
 **read [changes-and-import.md](changes-and-import.md) first**. In short: a
-change is triaged by what it touches and runs only those phases, described
-in a local `changes/` file meanwhile; an import writes `Form: built`
+change is triaged by what it touches and runs only those phases, in the
+recorded run mode, described in a local `changes/` file meanwhile; an
+import writes `Form: built`
 documents from the code, with provenance, for the user to approve as they
 stand, and changes no code.
 
@@ -509,6 +613,14 @@ stand, and changes no code.
   version unpinned.
 - Skipping phase content because the project is small, instead of
   compressing it.
+- One requirements document far past its budget instead of splitting by
+  feature; designing features scheduled for later.
+- Returning an approved document to DRAFT for an edit, or asking the user
+  to approve a ruling you only wrote down.
+- Asking the user a choice the requirements leave to design, instead of
+  deciding it as an `agent` decision.
+- Starting an auto run without the start sitting, or treating "don't
+  bother me" as a chosen mode.
 - Fixing an upstream gap only in the downstream document — forked truth.
 - Re-asking the user questions an upstream document already answers.
 - Treating the phase chain as strictly linear and pushing a discovered
@@ -517,7 +629,7 @@ stand, and changes no code.
   a ruled item left open.
 - Pushing the branch or opening a pull request nobody asked for.
 - Editing an approved decision to match the code, or listing that edit as
-  something the slice's re-approval covers.
+  something the slice's approval covers.
 - Running the whole chain for a change that touches one phase — or
   skipping triage and editing code for a change that alters a rule.
 - Keeping DDL or an API inventory in the docs after the code owns it.

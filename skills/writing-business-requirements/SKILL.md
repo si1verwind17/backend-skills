@@ -28,6 +28,14 @@ decision, use case, rule, and non-functional carries a **stable id** (LD1,
 UC1, R1, NF1) so downstream documents can trace to it ("write path
 implements R3"). Ids are never renumbered or reused: a withdrawn item keeps
 its id, marked withdrawn, and a new one takes the next free number.
+**When the requirements for what is built now outgrow one document's
+budget** (see the size check below), they split by feature — the
+build flow's sizing step decides it: the shared part (actors, locked
+decisions, non-functionals, environment, the rules every feature obeys)
+stays in `requirements.md`, each feature gets `<area>/requirements.md`,
+written when that feature's turn comes, with the same ten sections and
+ids prefixed by the area's short code (`STK-R3`; the shared part uses
+`CORE`).
 The header and the open-items format, in short (full rules in
 documents.md):
 
@@ -111,7 +119,9 @@ Exactly these ten sections, numbered as below — the lifecycle lives inside
   faithfully, cite the source section per item, and do not silently
   upgrade its wishes ("might want analytics later") into requirements —
   those land as anticipated-future notes on the relevant use case or
-  integration.
+  integration. A feature the source schedules for a later release is
+  named in the out-of-scope section with its release, never digested
+  ahead.
 
 ## Elicitation order (interview mode)
 
@@ -176,7 +186,8 @@ here.
 - [ ] Sizing/growth, criticality, and the deployment target are stated or
       open items.
 - [ ] Size: a soft budget of about 2,500 words; past it, cut restatement
-      before cutting rules.
+      before cutting rules; still past it, split by feature (above) rather
+      than cut rules.
 - [ ] Out-of-scope section exists and is non-empty (an empty one usually
       means it wasn't asked).
 
