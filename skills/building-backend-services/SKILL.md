@@ -32,7 +32,7 @@ shape and write paths tell you state, scaling, and boundaries (phase 2); the
 architecture's deployment targets and interaction styles constrain the stack
 (phase 3); and implementation starts only when nothing upstream is ambiguous
 (phase 4). A project too large for one requirements document runs this
-chain once per chunk — see Size, chunks and the run mode.
+chain once per chunk — see [run-modes.md](run-modes.md).
 
 Shared across all phases and owned by this skill: the document header, the
 ids, `open-items.md`, `plan.md`, how changes to approved documents are
@@ -48,7 +48,9 @@ ahead of an unreviewed deliverable.
    document reads `Status: DRAFT`; an approved one keeps its Status line,
    and the edit is a change since its approval (see documents.md).
 2. **Self-check** — the phase skill's own checklist, the consistency pass
-   (below), and the size check (see The documents).
+   (below), the size check (see The documents), and
+   `python3 <this skill's folder>/check_docs.py docs/backend-design` —
+   fix every line it prints (without Python, make its checks by reading).
 3. **Agent review** — an independent reviewer (below), given your
    consistency findings as a written list, then the reviewer re-verifies the
    fixes to its blocking findings: continue the same reviewer, or give a
@@ -75,7 +77,7 @@ ahead of an unreviewed deliverable.
    change to approve: the ruling approved it. A **blocking** open item
    must be decided before its phase's gate passes; a non-blocking one may
    carry forward, naming the phase that must decide it. In an auto mode,
-   gates pass on their own until the mode's stop (see Run modes).
+   gates pass on their own until the mode's stop (see run-modes.md).
 
 Phase 4 runs this cycle **per slice** — see Phase 4 below.
 
@@ -152,8 +154,11 @@ and its findings are listed — the reviewer is a second line, never the
 first: a gap the pass should have caught and only the reviewer found is a
 miss, not a fix — the agent review ran, its blocking
 fixes were re-verified by the reviewer or another fresh agent until each
-is ruled SUFFICIENT, and every open question is a row in `open-items.md` —
-or the presentation states why no agent could be dispatched.
+is ruled SUFFICIENT — on every change set, the changes that need no
+approval included — every open question is a row in `open-items.md`, and
+`check_docs.py --gate` prints nothing (it checks the branch and that the
+work is committed) — or the presentation states why no agent could be
+dispatched.
 "Re-verification skipped" is not a gate, and neither is a document left in
 DRAFT because a repaired fix was never sent back. That includes the last
 repair, however small: a one-line fix to a finding ruled INSUFFICIENT goes
@@ -178,7 +183,7 @@ remind, or auto-proceed on silence; an unattended run simply ends at the
 gate and resumes later (see Resuming mid-chain).
 
 A gate is passed by exactly two things: **the user approving that specific
-deliverable**, or **an auto mode the user chose** (see Run modes), up to
+deliverable**, or **an auto mode the user chose** (see run-modes.md), up to
 that mode's stop. "Skip the reviews, proceed to the end", said before the
 start sitting, is auto until done chosen in advance. Nothing else counts —
 not a non-interactive "state your assumption and proceed", not "build it
@@ -196,7 +201,8 @@ that mean stop: "the draft is basically done", "I recorded the question so
 I can proceed", "nobody can approve anyway", "I'll implement now and they
 can review both together".
 
-**Every run works on a local branch.** Before the run's first commit,
+**Every run works on a local branch** — a phase, a change, or only
+writing rulings down. Before the run's first commit,
 create a branch in the user's repository (`backend/<service>`, or
 `backend/<change-slug>` for a change); each phase cycle and each slice
 commits there, so the changes since an approval are the diff since its
@@ -240,122 +246,12 @@ the start sitting, below.
 
 ## Size, chunks and the run mode
 
-**Size the project during phase 0**, with one test for every project: do
-the requirements for what is built now fit one requirements document's
-budget (about 2,500 words, set by `writing-business-requirements`)?
-
-| Size | Shape |
-|---|---|
-| Small — a POC, one capability, a handful of entities | one chunk; the three design deliverables may collapse into one shorter document (keeping every section: entities/DDL, decisions, event catalog, stack pins), and the gates may batch into one |
-| Fits the budget | one chunk, the four documents |
-| Does not fit | split by feature, below |
-
-A small project compresses phases, never skips their *content*.
-
-**Splitting by feature.** Read the whole input once, only to write the
-feature map into `plan.md`: every feature the input names, scheduled now or
-later, and the order between them. What every feature needs — the
-input's cross-cutting features, whole (accounts and roles, notifications),
-plus identity, access, audit and a shared write pattern where the input
-implies them — is the **foundation** chunk: phase 0 writes the
-foundation's requirements and the map, and the foundation runs the whole
-chain first, stack selection included. The foundation's requirements meet
-the same budget; one that doesn't fit is too broad. Then each other
-scheduled feature the input names is its own chunk — never merged with
-another — in the map's order: phase 0 for its area (the input's sections for
-that feature), then phases 1, 2 and 4 — phase 3 only when it needs a
-library or runtime the stack lacks. A feature scheduled for later is
-listed in the map and designed when its turn comes, never modelled ahead.
-Every entity has one owning area; other areas reference it. The documents
-split the same way (documents.md, Size check), so a change loads only the
-areas it touches, and a question that blocks one feature parks that chunk,
-not the run.
-
-**The start sitting** — the gate of the run's first phase 0, after its
-review — is one message:
-
-- the size and, when split, the chunk plan, for the user to approve;
-- the hard-to-reverse unknowns that neither the requirements nor
-  `context.md` settle — the deployment target, a constraint on the stack,
-  the datastore family, paid external services — each with your
-  recommendation, never "decide later": an auto run never decides these
-  alone, because overruling one after the run is a rewrite. For the stack,
-  recommend the constraint — a language or platform, from the team and the
-  estate; phase 3 still selects the full stack within it;
-- the run modes that differ for this project — all four when split by
-  feature; otherwise always these three: gated, auto until design done,
-  auto until done (for one chunk, auto until feature done is auto until
-  done) — each named with where it stops, one recommended with one
-  line of why, and one short line of when an auto run would still stop
-  ("may stop early if a requirement can't be built as written, a blocking
-  question parks every remaining chunk, or a step needs money, an external
-  account, a push or a deploy");
-- the render question, last.
-
-Use this shape, so no part is dropped:
-
-```markdown
-**Size:** split by feature — <why: the requirements for what is built now vs the budget>
-| Chunk | Covers | Depends on | State |          ← when split
-**Unknowns to settle before any auto run** (not settled by the requirements or context.md):
-| Unknown | Recommendation | Why |
-**Run mode** — gated until you choose:
-| Mode | Stops | |
-| Gated | at every phase gate | |
-| Auto until design done | before any code | recommended: <why> |
-| Auto until feature done | after each chunk is built | ← only when split |
-| Auto until done | after the last chunk | |
-An auto run may still stop early if <the stop line>.
-next: step 2/<total> — <skill> (<chunk>)
-Render the review page and open it?
-```
-
-Then stop. Record the size, the chunks and the chosen mode in `plan.md`;
-the user may change the mode at any later stop. When the user chose a mode
-before the start sitting ("skip the reviews, proceed to the end"), the run
-does not stop here: each hard-to-reverse unknown becomes an open item with
-your recommendation as the assumption in force, listed first at the mode's
-stop.
-
-## Run modes
-
-| Mode | Stops | Recommend when |
-|---|---|---|
-| Gated | at every phase gate of every chunk — the default until the user chooses | high stakes (money, compliance), or the user wants to shape the design |
-| Auto until design done | after the last design phase of every scheduled chunk, before any code; that sitting asks the mode for implementation | the requirements are new or uncertain |
-| Auto until feature done | after each chunk's last slice — offered only with two chunks or more | a project split by feature |
-| Auto until done | after the last chunk | a small project |
-
-**Between its stops, an auto run:**
-
-- **decides** every choice the requirements leave to design — data,
-  architecture, technical choices and technical figures — as a decision
-  row marked `agent`, with one line of why; never as an open item;
-- **follows the requirements**: where one doesn't make sense, can't be
-  built as written, or hits a limitation, it opens an item, marks what
-  depends on it `(contested — OI-n)` without redefining the requirement,
-  and designs the rest; it parks the chunk only when the chunk's core
-  depends on the item. A reviewer's judgment disagreement is an item too,
-  the author's version in force;
-- **parks a chunk** on a blocking item and continues with the chunks that
-  do not depend on it; with none left, it stops;
-- **never** decides a hard-to-reverse unknown, changes an approved
-  decision, pushes, merges, deploys, spends money or creates an external
-  account;
-- **still runs the agent review** at every phase and slice — it stands in
-  for the user's gate, so it is never skipped — and **finishes each cycle
-  before the next starts**: review re-verified and committed, then the
-  next phase. It waits for its own reviewer; ending a turn while the
-  reviewer runs ends a non-interactive run, and is not a stop.
-
-**The stop's sitting** is one message, per chunk: the blocking open items
-and the parked chunks with why; the changes awaiting approval, the agent's
-decisions first; the other open items — then, after auto until design
-done, the run mode for implementation, offered and recommended as at the
-start sitting, and last the render question. The
-user approves changes,
-rules on items, and may overrule an agent decision; an overrule is a
-change for the next run, through triage when code exists.
+**Read [run-modes.md](run-modes.md) during phase 0, before the start
+sitting, and at every stop of an auto mode.** It sizes the project (one
+chunk, or split by feature into a foundation chunk and one chunk per
+feature), gives the start sitting's shape — the size, the hard-to-reverse
+unknowns with recommendations, the run modes — and says what an auto run
+decides, where it stops, and the stop's sitting's shape.
 
 ## External context intake (conditional)
 

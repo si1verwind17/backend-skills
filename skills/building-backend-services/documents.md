@@ -64,7 +64,11 @@ data decisions. `architecture-design.md`: `I` interactions, `EV` events,
 `AD` architecture decisions. `stack-selection.md`: `SD` stack decisions (pins
 are listed without ids). `open-items.md`: `OI`. A decision is one row: the
 decision, who made it (`user`, with the ruling's date, or `agent`), why
-(one line), the alternative it beat (one line), and the ids it serves.
+(one line), the alternative it beat (one line), and the ids it serves. A
+ruling's row carries the ruling as the user worded it, `user, <name>,
+<date>`, and `<name>'s ruling` as its why — never a reason the user did
+not give, and never the open item it closed; what the ruling implies
+beyond its words is an `agent` row of its own, awaiting approval.
 A design phase decides the choices the requirements leave to design itself,
 as `agent` rows — it never asks them as open items. Ids are how approved
 decisions are protected and how changes are triaged. In a set split by
@@ -100,7 +104,7 @@ decision row (see Ids), never a row here. A row is for the rest:
   record, and every question a phase skill names as the user's — is a row
   with its assumption in force, never a section of the phase's own
   document; a fact `context.md` already records is not an assumption;
-- so is every hard-to-reverse unknown (SKILL.md, the start sitting), every
+- so is every hard-to-reverse unknown (run-modes.md, the start sitting), every
   requirement that doesn't make sense, can't be built as written, or hits
   a limitation, and every proposal to change an approved decision;
 - a review finding that needs the user — a judgment disagreement, a
