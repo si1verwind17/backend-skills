@@ -96,8 +96,8 @@ add it to `.git/info/exclude` the first time (see `documents.md` in the
       </div>
     </section>
     <section class="owed"><h2>Changes since approval</h2>      <!-- only for an APPROVED document changed since its approval -->
-      <p>Since APPROVED · 2026-08-14 · commit 1a2b3c4</p>
-      <ul><li>2026-08-20 · Record the grace-period ruling · adds <a class="idref" href="#R4">R4</a>, changes <a class="idref" href="#R2">R2</a></li></ul>
+      <p>Since APPROVED · 2026-03-02 · commit 1a2b3c4</p>
+      <ul><li>2026-03-11 · Add the refund window (ruling of 2026-03-09) · adds <a class="idref" href="#R9">R9</a>, changes <a class="idref" href="#R5">R5</a></li></ul>
     </section>
     <div class="doc">
       <h1>…</h1><p class="header-lines">Status: …
@@ -188,8 +188,9 @@ phase 4 (implementation) has no tab — its items go to the gate tab's
      assumption folded under that line.
    - **Changes since approval** — only for an APPROVED document that has
      any: the approval it counts from (the `Status:` line's date and the
-     commit), then one line per commit, newest first — its date, its
-     subject, and the ids it adds, changes or removes in this document,
+     commit), then one line per commit, newest first — its commit date and
+     full subject as git prints them (`git log --format='%ad · %s'
+     --date=short`), and the ids it adds, changes or removes in this document,
      each linked (a removed id unlinked) — and uncommitted edits as a last
      line. List what changed; never judge whether a change needs approval:
      the gate message says that.

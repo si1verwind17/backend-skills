@@ -383,3 +383,5 @@ Walk these checks against your actual output files; fix, don't rationalize:
 - Mixed timestamp representations across sibling tables.
 - Indexes invented without an access pattern, or debug paths left unindexed.
 - Constraints dropped for test-data convenience instead of writing seeds.
+- Checking DDL in a throwaway container with a fixed name, or removing a
+  container you did not start: name yours uniquely, remove only yours.

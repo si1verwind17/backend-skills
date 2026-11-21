@@ -53,12 +53,12 @@ ahead of an unreviewed deliverable.
    fix every line it prints (without Python, make its checks by reading).
 3. **Agent review** — an independent reviewer (below), given your
    consistency findings as a written list, then the reviewer re-verifies the
-   fixes to its blocking findings: continue the same reviewer, or give a
-   fresh one the original findings' full text — never just their ids. A fix
-   ruled INSUFFICIENT is repaired and sent back again. A reviewer's
-   suggestion is checked against your own rules before you apply it — in
-   a change, it adds only what the request asked; anything more is an open
-   item.
+   fixes to its blocking findings: a fresh one in the foreground, given the
+   original findings' full text — never just their ids — or, interactively,
+   the same one continued; a verdict is only what a reviewer returned. A
+   reviewer's suggestion is checked against your own rules before you apply
+   it — in a change, it adds only what the request asked; anything more is
+   an open item, or an `agent` row awaiting approval (documents.md, Ids).
    A never-approved document's header becomes `Status: REVIEWED` only
    after that re-verification (or straight away when the review found
    nothing blocking).
@@ -90,10 +90,9 @@ the axis author self-checklists structurally cannot cover — **claims
 verified against artifacts**: every "X is enforced / guaranteed /
 covered" statement in the document is checked in the artifact it points
 at (DDL, diagram, table, pin list), with evidence cited per finding.
-Authors verify presence; only an independent reader verifies truth.
 Give the reviewer **absolute paths** — to the documents, to this skill and
 to the phase skill it reviews against — your consistency-pass list, and,
-for a document approved before, the diff since its approval's commit.
+for a document approved before, its approval's commit.
 The reviewer must be **at least as capable as the phase author, and
 preferably the strongest agent available — never a weaker one** (a
 weaker reviewer rubber-stamps whatever reads plausibly, and a same-tier
@@ -125,19 +124,17 @@ the paths of the document, this skill, `documents.md` and the phase skill.
 Otherwise, if the environment lets you start another agent, start it — a non-interactive run is not a reason to
 skip the review: *not being able to ask the user* is different from *not
 being able to dispatch*. Wait for the reviewer's result before going on —
-in the foreground, or by waiting on its notification: a run that ends its
+in the foreground, or on its notification, never a background timer: a run that ends its
 turn while its reviewer works has stopped mid-cycle, not at a gate.
 
 **Settle the reviewer channel once, then carry it.** Some environments gate
 agent dispatch behind the user's permission, or offer none. Ask once, when
-the first phase review comes due, and record the ruling in `plan.md` —
-re-asking at every gate is friction that trains the user to
-wave the review through. Where dispatch is unavailable the review still
+the first phase review comes due, and record the ruling in `plan.md`.
+Where dispatch is unavailable the review still
 happens, as a **declared self-review**: the author re-reads the deliverable
 as written — never from memory of what was meant — lists every "enforced /
 guaranteed / covered" claim in it, and opens the artifact behind each one.
-That is the axis a self-checklist skips rather than the one it fails, so it
-is where the fallback earns whatever it can. Axes, triage, and the bounded
+Axes, triage, and the bounded
 loop are unchanged. Each gate presentation then carries one standing line —
 "phase review: self-review, no independent agent available (<reason>)" — so
 the user knows which findings came from an author-blind reader and can run
@@ -470,6 +467,9 @@ about to work on is not this pass:
       in `architecture-design.md` and `stack-selection.md`.
 - [ ] Every component the architecture demands (DB driver, queue client,
       cache client, crypto) has a pinned version in `stack-selection.md`.
+- [ ] Every rule a design document builds on can be built as written
+      within the locked decisions and `context.md`; one that can't is an
+      open item, and what depends on it reads `(contested — OI-n)`.
 - [ ] Every open question is in `open-items.md` and nowhere else; an item
       the user has ruled on is gone from it and present as a decision row.
 - [ ] Every change since a document's last approval is listed for the

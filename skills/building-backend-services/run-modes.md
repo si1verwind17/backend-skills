@@ -19,12 +19,15 @@ A small project compresses phases, never skips their *content*.
 
 **Splitting by feature.** Read the whole input once, only to write the
 feature map into `plan.md`: every feature the input names, scheduled now or
-later, and the order between them. What every feature needs — the
-input's cross-cutting features, whole (accounts and roles, notifications),
-plus identity, access, audit and a shared write pattern where the input
+later, and the order between them — a feature that creates, reads or
+registers another feature's entity depends on it, so read `Depends on`
+from the input's cross-references and list each chunk after the chunks
+it depends on. What every feature needs — the input's cross-cutting
+features, whole (accounts, organizations and roles, notifications), plus
+identity, access, audit and a shared write pattern where the input
 implies them — is the **foundation** chunk: phase 0 writes the
-foundation's requirements and the map, and the foundation runs the whole
-chain first, stack selection included. The foundation's requirements meet
+foundation's requirements and the map, and the foundation leads every
+phase, stack selection included — no feature designs or builds ahead of it. The foundation's requirements meet
 the same budget; one that doesn't fit is too broad. Then each other
 scheduled feature the input names is its own chunk — never merged with
 another — in the map's order: phase 0 for its area (the input's sections for
@@ -46,8 +49,9 @@ The gate of the run's first phase 0, after its review, is one message:
   the datastore family, paid external services — each with your
   recommendation, never "decide later" or "none": an auto run never decides
   these alone, because overruling one after the run is a rewrite. For the
-  stack, recommend the constraint — a language or platform, from the team
-  and the estate; phase 3 still selects the full stack within it;
+  stack, recommend the constraint — one language or platform, never a
+  choice between two, from the team and the estate; phase 3 still selects
+  the full stack within it;
 - the run modes that differ for this project — all four when split by
   feature; otherwise always these three: gated, auto until design done,
   auto until done (for one chunk, auto until feature done is auto until
@@ -56,6 +60,7 @@ The gate of the run's first phase 0, after its review, is one message:
   ("may stop early if a requirement can't be built as written, a blocking
   question parks every remaining chunk, or a step needs money, an external
   account, a push or a deploy");
+- the open items awaiting the user, blocking first;
 - the render question, last.
 
 Use this shape, so no part is dropped:
@@ -65,6 +70,7 @@ Use this shape, so no part is dropped:
 | Chunk | Covers | Depends on | State |          ← when split
 **Unknowns to settle before any auto run** (not settled by the requirements or context.md):
 | Unknown | Recommendation | Why |
+**Open items** — blocking first, one line each (Item · Question · Recommendation)
 **Run mode** — gated until you choose:
 | Mode | Stops | |
 | Gated | at every phase gate | |

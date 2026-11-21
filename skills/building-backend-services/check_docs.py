@@ -107,20 +107,43 @@ def check_plan(path):
     m = re.search(r"^Run mode: (.+)$", text, re.M)
     if m and m.group(1).strip() not in MODES:
         report(path, 1, "Run mode is one of: " + ", ".join(sorted(MODES)))
-    header_seen = False
+    header, rows = None, []
     for n, line in enumerate(text.splitlines(), 1):
         if not line.startswith("|"):
             continue
         row = cells(line)
-        if not header_seen:
-            header_seen = True
+        if header is None:
+            header = row
             if row[:1] != ["Chunk"] or row[-1:] != ["State"]:
                 report(path, n, "chunk table columns: Chunk | Code | Covers | Depends on | State")
             continue
         if set("".join(row)) <= set("-: "):
             continue
+        rows.append((n, row))
         if not STATE_RE.match(row[-1]):
             report(path, n, f"state '{row[-1]}' is not one of the plan.md states")
+    check_chunk_order(path, header or [], rows)
+
+
+def check_chunk_order(path, header, rows):
+    """Each chunk is listed after the chunks it depends on."""
+    if "Depends on" not in header:
+        return
+    dep_col = header.index("Depends on")
+    code_col = header.index("Code") if "Code" in header else None
+    position = {}
+    for i, (_, row) in enumerate(rows):
+        position[row[0].lower()] = i
+        if code_col is not None and len(row) > code_col:
+            position[row[code_col].lower()] = i
+    for i, (n, row) in enumerate(rows):
+        if len(row) <= dep_col:
+            continue
+        for dep in re.split(r",|;|/|\band\b", re.sub(r"\(.*?\)", "", row[dep_col])):
+            j = position.get(dep.strip().lower())
+            if j is not None and j > i:
+                report(path, n, f"'{row[0]}' depends on '{dep.strip()}', listed below it: order each "
+                                "chunk after the chunks it depends on (run-modes.md, Splitting by feature)")
 
 
 def git(root, *args):
@@ -148,6 +171,11 @@ def check_git(docs, step_docs, gate):
             report(path, 1, "this document was APPROVED: an edit keeps its Status line "
                             "(documents.md, Changes since an approval)")
             approved.add(path)
+        committed = git(docs, "show", f"HEAD:./{path.relative_to(docs).as_posix()}")
+        if committed and path not in approved and re.search(r"^Status: DRAFT", committed, re.M):
+            report(path, 1, "committed with 'Status: DRAFT': a cycle commits only after its review is "
+                            "re-verified, its header then reading REVIEWED — finish the review, never "
+                            "just the header (SKILL.md, cycle steps 3-4)")
     if not gate:
         return approved
     for path in step_docs:
@@ -179,16 +207,19 @@ def print_shape(docs, step_docs, approved):
         print(f"Run mode: {mode}. A gate before this mode's stop passes on its own: present nothing "
               "and go on to the next phase. At the stop, set each stopped chunk's plan.md state to "
               "'awaiting approval' (or 'parked (OI-n)'), commit, then present the stop's sitting "
-              "(run-modes.md) in this shape:")
+              "(run-modes.md) in this shape, as your final message, with no background wait left running:")
         print(template("## The stop's sitting"))
     elif not approved and not any(head_line(p, "Form:").strip() == "Form: built" for p in step_docs):
         print("No document is approved yet: this gate is the start sitting (run-modes.md). "
-              "Present it in this shape, every part included:")
+              "Present it in this shape, every part included, as your final message, with no "
+              "background wait left running:")
         print(template("## The start sitting"))
     else:
         print("Present the gate as SKILL.md's 'Gate presentation is glanceable' says: the review "
               "findings with dispositions, the changes since each approval in two groups, the open "
-              "items (blocking first), the next-step line, then the render question, last.")
+              "items (blocking first), the run mode while the user has not chosen one (a plan.md "
+              "you created reads gated), the next-step line, then the render question, last; as "
+              "your final message, with no background wait left running.")
 
 
 def main(argv):

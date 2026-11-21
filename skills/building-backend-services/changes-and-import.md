@@ -24,9 +24,10 @@ and its gates follow the run mode the user chose, as `plan.md` records it
 gate asks it). Edits to approved documents are changes
 since their approval (documents.md) — the documents keep `APPROVED`.
 **A change adds only what the request states.** The rules and use
-cases it adds are the ones the requester asked for; everything you infer
-around them — edge cases, mechanisms, defaults — is an open item with an
-assumption in force, never a new rule. The request is the source; your
+cases it adds are the ones the requester asked for; every rule you infer
+around them — edge cases, defaults — is an open item with an assumption in
+force, never a new rule (a mechanism the design needs is an `agent` row,
+awaiting approval). The request is the source; your
 recommendation is not. Name the ids it touches: a change that would alter an APPROVED
 decision row asks the user before amending it, as in SKILL.md's Backtracking.
 

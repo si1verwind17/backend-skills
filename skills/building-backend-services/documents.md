@@ -25,8 +25,8 @@ message, never in the header — "DRAFT (was APPROVED …; edited …)" or
 
 `Builds on:` names the upstream documents and the ids this one serves —
 never a status, a date or an open-item id, so an approval or a ruling
-upstream never edits this header: `requirements.md (UC1–UC2, R1–R3)`, not
-`requirements.md (APPROVED 2026-08-14) — UC1–UC2, R1–R3, OI-1`.
+upstream never edits this header: `requirements.md (UC3, R4–R6)`, not
+`requirements.md (APPROVED 2026-03-02) — UC3, R4–R6, OI-2`.
 
 A document without a header (written before this convention) is treated
 as the user describes it; give it the full header — all three lines — the
@@ -45,6 +45,13 @@ on the run's branch — the changes are the diff since the approval's commit
 | Adds or changes what the document states: a rule, a decision, an entity, a contract, a figure | awaits the user's approval, at the next gate or stop |
 | Writes down a ruling as the user gave it; fixes a gap (says what approved artifacts already say); re-points citations; adds a missing id or a `(contested — OI-n)` marker | needs none — the ruling, or the approved artifacts, already decided it; listed for information |
 | Would change what an approved decision says | never made: an open item, the approved text in force (SKILL.md, Backtracking) |
+
+Group each change on its own, never by the document or section it sits
+in: a table made only to hold a ruling's row belongs to the write-down; a
+citation re-pointed to a row awaiting approval awaits with it; an edit that
+does both is split, each part in its group; any marker but `(contested —
+OI-n)` added to an approved decision awaits approval. An open item you
+raise is in neither group: it is listed with the open items.
 
 Approving the changes moves the document's stamp to the approval's date.
 The agent review checks every change set — the group that needs no
@@ -68,7 +75,9 @@ decision, who made it (`user`, with the ruling's date, or `agent`), why
 ruling's row carries the ruling as the user worded it, `user, <name>,
 <date>`, and `<name>'s ruling` as its why — never a reason the user did
 not give, and never the open item it closed; what the ruling implies
-beyond its words is an `agent` row of its own, awaiting approval.
+beyond its words takes the open-item test below: a design choice is an
+`agent` row of its own, awaiting approval, and an outside fact or a
+business call is an open item.
 A design phase decides the choices the requirements leave to design itself,
 as `agent` rows — it never asks them as open items. Ids are how approved
 decisions are protected and how changes are triaged. In a set split by
