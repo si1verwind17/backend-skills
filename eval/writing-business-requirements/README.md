@@ -11,7 +11,7 @@ Turning a fuzzy ask or a business brief into `requirements.md` and `open-items.m
 
 ## Pending validation
 
-None.
+- `13b64fb` — requirements split by feature past the budget, area-prefixed ids; a feature scheduled for a later release is named out of scope, never digested. Validates on scenario 2.
 
 ## Latest results
 

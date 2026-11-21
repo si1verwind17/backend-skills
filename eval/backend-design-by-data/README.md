@@ -12,7 +12,7 @@ Data design: the engine-neutral logical model and access patterns, the engine fa
 
 ## Pending validation
 
-None.
+- `13b64fb` — open items hold business or environment questions; a choice the requirements leave to design is a `DD` row marked `agent`; DD rows name who decided. Validates on scenario 1 (check 1 reworded).
 
 ## Latest results
 

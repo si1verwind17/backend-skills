@@ -30,7 +30,9 @@
 1. **Open questions surfaced**: the ambiguous profile-numbering requirement
    ("profile number 2 of this account" — per-account numbering vs global id)
    is raised as a row in `open-items.md` with an assumption in force; other
-   assumptions are rows too, not a section of `data-design.md`.
+   business or environment assumptions are rows too, not a section of
+   `data-design.md`; a choice the requirements leave to design is a `DD` row
+   marked `agent`, not an open item.
 2. **Deliverable contract**: `data-design.md` opens with the document header
    and has, in order, a logical model (Mermaid ER diagram, `E` ids, per-entity
    rationale, id semantics), an access-pattern table, the engine family as a

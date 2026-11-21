@@ -11,7 +11,7 @@ Architecture: service boundaries, state, caching, sync versus async, events, fai
 
 ## Pending validation
 
-None.
+- `13b64fb` — open items hold business or environment questions; a choice the requirements leave to design is an `AD` row marked `agent`; AD rows name who decided. Validates on scenario 1 (check 1 reworded).
 
 ## Latest results
 

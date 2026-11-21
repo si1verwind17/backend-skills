@@ -28,11 +28,15 @@ All four documents are approved; no code exists yet.
 2. **Change file, local**: `docs/backend-design/changes/<date>-<slug>.md`
    exists with the ids it adds/touches and the phases it runs; its path is
    in `.git/info/exclude`, and `.gitignore` is unchanged.
-3. **In place, ids stable**: `requirements.md` gains a new rule with the next
-   free id (R4) — no renumbering, no changelog text — and its status
-   returns to DRAFT or REVIEWED; untouched documents stay APPROVED.
+3. **In place, ids stable, no flip**: `requirements.md` gains a new rule with
+   the next free id (R4) — no renumbering, no changelog text — and its
+   Status line still reads `APPROVED · 2026-08-14 · approved by Dana Reyes`;
+   the gate lists R4 among the changes awaiting approval.
 4. **Open item for the number**: "a couple of minutes" becomes a row in
    `open-items.md` with an owner, and the rule cites its id.
 5. **Stops at the phase-0 gate**: no data-design edit beyond what phase 0
    needs, no code, no commit on the main branch; the gate presentation
    names the next phase and asks whether to render the review page.
+6. **Local branch, mode asked**: the phase's work is committed on a new
+   local branch (main unmoved, nothing pushed), and with no `plan.md` in
+   the fixture the gate asks which run mode the change uses.

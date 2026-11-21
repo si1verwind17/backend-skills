@@ -7,8 +7,9 @@ and any other agent that reads it.
 What these skills add, compared with asking an agent without them:
 
 - **A design process with checkpoints.** Requirements, data design, architecture and stack choice are separate
-  documents with stable ids, and a person reviews each one before the next step starts and before any code is
-  written.
+  documents with stable ids. After the requirements, you pick how often it stops for you: at every step, once the
+  design is done, after each feature, or at the end. A project too big for one requirements document is split by
+  feature, and you approve changes, not whole documents again.
 - **Decisions that stay decided.** Approved decisions are protected: a later phase that wants to change one has to
   say so and ask, instead of quietly drifting.
 - **Documents that agree with each other.** A consistency pass checks the documents against each other before
@@ -50,8 +51,8 @@ No prerequisites for the skills themselves. `rendering-design-docs` needs Node 1
 ## Skills
 
 - [`building-backend-services`](skills/building-backend-services/SKILL.md): orchestrates the whole chain
-  (requirements, data design, architecture, stack selection, implementation) as phases with a human review gate
-  between each.
+  (requirements, data design, architecture, stack selection, implementation) as phases, sized to the project
+  (large ones split by feature), stopping for human review where the chosen run mode says.
 - [`writing-business-requirements`](skills/writing-business-requirements/SKILL.md): turns a fuzzy business ask or
   an existing PRD into structured requirements with stable ids, locked decisions and owner-assigned open questions.
 - [`backend-design-by-data`](skills/backend-design-by-data/SKILL.md): designs the data layer from the requirements:
@@ -75,7 +76,8 @@ Start the whole flow, from requirements to implementation, by running the orches
 
 That is its name when installed as the Claude Code plugin; copied into a skills folder it is
 `/building-backend-services`. It runs each step in order (requirements, data design, architecture, stack selection,
-implementation), stops for your approval at every gate, and calls the other skills as it goes. Or ask in plain words:
+implementation), stops for your approval where the run mode you pick says, and calls the other skills as it goes.
+Or ask in plain words:
 
 > Build a backend service from this business ask, with a review gate after each phase.
 

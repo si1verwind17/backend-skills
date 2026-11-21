@@ -12,9 +12,13 @@ Orchestration: the per-phase cycle and its gates, the shared document format, op
 | [4](scenarios/4-change-triage.md) | a change on an approved design: triage, local change file, in-place edits |
 | [5](scenarios/5-import-large-repo.md) | import a 6,261-line repository: the light pass, a second defect it must not read |
 | [6](scenarios/6-implementation-phase.md) | the implementation phase, graded on the demo run: branch, slice commits, no push |
+| [7](scenarios/7-large-prd-sizing.md) | a PRD too large for one requirements document: feature map, foundation chunk, later features listed, the start sitting |
+| [8](scenarios/8-rulings-on-approved-docs.md) | rulings recorded in approved documents: no flip to DRAFT, write-downs need no approval, consequences kept apart |
+| [9](scenarios/9-auto-until-design-done.md) | an auto run until design done: no intermediate gates, agent decisions, a requirement that can't be built as written |
 
 ## Pending validation
 
+- `13b64fb` — sizing and split by feature, the start sitting and run modes, changes since an approval instead of a flip to DRAFT, design commits on a local branch, design choices as `agent` decision rows. New checks 2.7–2.9, 4.3 (rewritten) and 4.6; new scenarios 7, 8 and 9 (fixtures `building-backend-services-large-prd`, `building-backend-services-auto`). Validates on scenarios 2, 4, 7, 8 and 9 (skill arm; control on 7–9), then 1 and 6 at the next demo run.
 - `6abb917` — a slice never changes an approved decision (not to match the code, not as a change for the re-approval to cover); the branch's first commit holds the approved design documents; under a waiver a blocking item passes the gate with the approved text in force. Validates on scenario 6 at the next demo run.
 
 ## Latest results

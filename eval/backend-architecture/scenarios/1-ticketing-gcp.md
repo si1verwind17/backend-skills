@@ -32,8 +32,9 @@
 
 1. **Open questions surfaced**: the undecided service split is a row in
    `open-items.md` with a stated assumption (not silently resolved); other
-   assumptions are rows too — no open-questions section inside
-   `architecture-design.md` (tightened 2026-10-17).
+   business or environment assumptions are rows too — no open-questions
+   section inside `architecture-design.md`; a choice the requirements leave
+   to design is an `AD` row marked `agent`, not an open item.
 2. **Deliverable contract**: `architecture-design.md` opening with the
    document header, decisions as `AD` rows, interactions with `I` ids and
    events with `EV` ids (added 2026-10-17), with a Mermaid

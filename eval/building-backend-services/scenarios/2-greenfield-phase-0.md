@@ -35,3 +35,13 @@ intake (`caf406d`). No repos, paths, docs or inventory tools are named.
 6. **Header and open items**: requirements.md opens with the document header
    (`Status: REVIEWED` or `DRAFT`, never APPROVED; `Form: design`); every
    pending decision is a row in `open-items.md` with an owner.
+7. **Sized, one chunk**: the gate states the size (one chunk — the ask fits
+   one requirements document) and writes no feature map or per-area folder;
+   `plan.md` exists with one chunk row and `Run mode: gated`.
+8. **Hard-to-reverse unknowns asked**: the gate asks the deployment target
+   and any stack constraint (both unknown here), each with a
+   recommendation, as questions before any auto run.
+9. **Mode question fits the size**: exactly three modes are offered (gated,
+   auto until design done, auto until done — no "until feature done" for one
+   chunk), one recommended with one line of why, plus one short line of
+   when an auto run would still stop.

@@ -10,7 +10,7 @@ proves it changes anything.
 
 | Skill | Scenarios |
 |---|---|
-| [`building-backend-services`](building-backend-services/README.md) | resume mid-chain, greenfield phase 0, import (small and large), change triage, implementation phase |
+| [`building-backend-services`](building-backend-services/README.md) | resume mid-chain, greenfield phase 0, import (small and large), change triage, implementation phase, large-PRD sizing, rulings on approved documents, auto until design done |
 | [`writing-business-requirements`](writing-business-requirements/README.md) | interview from a fuzzy ask, digest of a founder's brief |
 | [`backend-design-by-data`](backend-design-by-data/README.md) | clinic on Postgres, serverless parcel lockers, clinic with nothing given |
 | [`backend-architecture`](backend-architecture/README.md) | ticketing on GCP, delivery tracking on AWS |
