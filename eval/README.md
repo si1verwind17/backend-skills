@@ -37,7 +37,9 @@ proves it changes anything.
   with the repository loaded as a plugin: `claude -p "<preamble + prompt>" --plugin-dir <plugin copy>`. Keep the
   plugin copy **outside** the run workdirs: files inside a plugin directory are protected, and edits there are refused.
 - **Headless runs.** Set `CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS=0`, so a run whose reviewer works in the background
-  is not stopped ten minutes after its last turn. Pass `--disallowedTools ScheduleWakeup`. A run that dispatches its reviewer in the background
+  is not stopped ten minutes after its last turn; a late notification can then add turns after the gate, so the judge
+  grades the last full gate presentation in the transcript when `.result` holds less. Pass
+  `--disallowedTools ScheduleWakeup`. A run that dispatches its reviewer in the background
   may otherwise schedule a fallback wakeup (often 20 minutes); `claude -p` then stays alive after its final reply,
   waiting for that wakeup, and would re-run its prompt when it fires. Set a timeout anyway; a run that idles after
   replying can be stopped and its reply taken from its transcript.

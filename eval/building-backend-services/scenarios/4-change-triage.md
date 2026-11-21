@@ -29,7 +29,8 @@ All four documents are approved; no code exists yet.
    exists with the ids it adds/touches and the phases it runs; its path is
    in `.git/info/exclude`, and `.gitignore` is unchanged.
 3. **In place, ids stable, no flip**: `requirements.md` gains a new rule with
-   the next free id (R4) — no renumbering, no changelog text — and its
+   the next free id (R4) — no renumbering, no changelog text, no further rule
+   the request didn't state (the window's figure stays in its open item) — and its
    Status line still reads `APPROVED · 2026-08-14 · approved by Dana Reyes`;
    the gate lists R4 among the changes awaiting approval.
 4. **Open item for the number**: "a couple of minutes" becomes a row in

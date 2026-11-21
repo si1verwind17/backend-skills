@@ -18,8 +18,7 @@ Orchestration: the per-phase cycle and its gates, the shared document format, op
 
 ## Pending validation
 
-- `88f14b2` — fixes from the first run of scenarios 7–9: hard-to-reverse unknowns exclude what `context.md` settles and always carry a recommendation; all four modes when split; the open-item test "can you settle it yourself?"; an auto run finishes each cycle and waits for its reviewer; the stop's sitting asks the implementation mode. Scenario 9 checks 5 and 7 reworded to match. Validates on scenarios 7, 8 and 9.
-- `13b64fb` — sizing and split by feature, the start sitting and run modes, changes since an approval instead of a flip to DRAFT, design commits on a local branch, design choices as `agent` decision rows. New checks 2.7–2.9, 4.3 (rewritten) and 4.6; new scenarios 7, 8 and 9 (fixtures `building-backend-services-large-prd`, `building-backend-services-auto`). Validates on scenarios 2, 4, 7, 8 and 9 (skill arm; control on 7–9), then 1 and 6 at the next demo run.
+- `49c9f39` — fixes from the second round: every offered mode named, one chunk always gets three; a run mode written into a new `plan.md` is not a choice; one commit per phase cycle; the stop's sitting recommends the implementation mode; scenario 4 check 3 and scenario 9 checks 4 and 5 tightened. Validates on scenarios 2, 4 and 9 (skill arm), then 1 and 6 at the next demo run.
 - `6abb917` — a slice never changes an approved decision (not to match the code, not as a change for the re-approval to cover); the branch's first commit holds the approved design documents; under a waiver a blocking item passes the gate with the approved text in force. Validates on scenario 6 at the next demo run.
 
 ## Latest results
@@ -30,12 +29,15 @@ was evaluated.
 | Scenario | Skill@ | Arm | Result | Notes |
 |---|---|---|---|---|
 | 1 | fcc1288 | skill (plugin) | 10/10 (1 run) | the author's own pass found seeds A and B; every blocking fix re-verified until SUFFICIENT (two rounds); reviewer given absolute paths; the brief listed findings only, not every pass item |
-| 2 | 9a8e14b | skill | 17/18 (3 runs) | clean skip held 3/3; one provisional figure without an open-item row |
+| 2 | 88f14b2 | skill (plugin) | 25/27 (3 runs) | sized one chunk, unknowns recommended, plan.md written 3/3; one run offered two modes, not three; one run named the absent context twice |
 | 3 | 3d078c5 | skill | 15/16 (2 runs) | read plan first, full import under the threshold; comment intent beside a data-design row once |
 | 3 | — | control | 12/24 (3 runs) | caught the defect without fixing it, but no header, no `file:line`, questions scattered, DDL reconstructed |
-| 4 | 8772816 | skill (plugin) | 5/5 (1 run) | REVIEWED keeps the last approval; reviewer suggestions beyond the request queued as open items; the reviewer got the author's findings first |
+| 4 | 88f14b2 | skill (plugin) | 17/18 (3 runs) | Status line kept, R4 listed as awaiting approval, local branch 3/3; one run wrote `Run mode: gated` into its new plan.md and never asked; one run added an inferred rule (check since tightened) |
 | 5 | e8db71d | skill (plugin) | 10/10 (2 runs) | plan row stays first; every blocking fix re-verified until SUFFICIENT; no decision row on README/config alone in one run, one borderline row in the other; residual: plan written after reading, an edit after a SUFFICIENT ruling not sent back, the author's pass under-reported the README item (the reviewer caught it) |
-| 7 | 13b64fb | skill (plugin) | 16/21 (3 runs) | split by feature and foundation right 3/3, later features listed only; no run offered auto until feature done (3/3); the language deferred to phase 3 without a recommendation (2/3) |
-| 8 | 13b64fb | skill (plugin) | 19/21 (3 runs) | no Status flip 3/3, write-downs filed as needing no approval, the mTLS consequence raised as an open item 3/3; `Builds on:` kept its status and date (2/3); agent review skipped for write-downs (2/3) |
-| 9 | 13b64fb | skill (plugin) | 15/24 (3 runs, checks 5 and 7 as first worded) | ran to its stop without gates, R4 raised and kept 3/3; facts `context.md` settles and design choices raised as open items (3/3); stop's sitting never asked the implementation mode (3/3); one run ended while its background reviewer ran |
 | 6 | 9bdae75 | skill (plugin) | 6/6 (1 run, checks 1–6; 7 and 8 added after it) | 291 tests re-run green from a fresh clone; every blocking fix re-verified until SUFFICIENT; review result in each slice commit; render offered; missed: approved decisions (W1, an API error code, SD10) rewritten in place during slices and re-approved under the waiver instead of an open item, requirements.md left uncommitted on the branch |
+| 7 | 88f14b2 | skill (plugin) | 20/21 (3 runs) | split, foundation, later features, `CORE-` ids, recommended unknowns 3/3; one run named only its recommended mode |
+| 8 | 88f14b2 | skill (plugin) | 21/21 (3 runs) | `Builds on:` cleaned and an agent review of the change set in every run; one run filed a redrawn diagram as needing no approval |
+| 9 | 88f14b2 | skill (plugin) | 21/24 (3 runs) | two runs 8/8; one committed every draft and fix round, filed minor findings as rows, and asked the render question before the mode |
+| 7 | — | control | 0/21 (3 runs) | a discovery note, no plan, no requirements document, no modes |
+| 8 | — | control | 5/21 (3 runs) | rulings left beside "RESOLVED" rows, citations kept, re-approval asked; check 6 passed by every control |
+| 9 | — | control | 6/24 (3 runs) | one combined design, no stack selection, no per-phase review, commits on main; checks 4 (as first worded) and 6 passed by every control |

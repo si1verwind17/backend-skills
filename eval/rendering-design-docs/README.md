@@ -12,7 +12,7 @@ The review page: one tab per step document, decisions owed per tab, the blocking
 
 ## Pending validation
 
-- `e27550a` — changes since approval (tab marker and per-commit list), the gate tab counting them, the Plan tab, one page per chunk in a split set. Validates on scenario 3 (skill arm; control too, as its checks are new), then 1 and 2.
+- `49c9f39` — `plan.md`'s header lines keep their lines; with `e27550a`'s changes since approval, Plan tab and per-chunk pages: control arm of scenario 3, and scenarios 1 and 2 (skill arm), not yet run.
 
 ## Latest results
 
@@ -23,4 +23,5 @@ was evaluated.
 |---|---|---|---|---|
 | 1 | 8772816 | skill | 9/9 (1 run) | each diagram under its own heading, checked against its Mermaid source; header lines merged into one line in one document |
 | 2 | 0d17ef9 | skill | 5/5 (1 run) | Change tab first, two step tabs, touched markers; theme conformance also checked (all pass) |
+| 3 | 88f14b2 | skill (plugin) | 18/18 (3 runs) | marker, changes list and gate tab on the changed document only; no grouping on the page; one run put diagrams under the wrong headings (outside the checks); plan header lines merged in two runs |
 | 1 | — | control | 29/40 (5 runs, the earlier single-page checks) | no gate summary first, no id anchors |
