@@ -25,6 +25,7 @@ STATUS_RE = re.compile(
 DATE_RE = re.compile(r"\b\d{4}-\d{2}-\d{2}\b")
 STATUS_WORD_RE = re.compile(r"\b(?:APPROVED|REVIEWED|DRAFT)\b")
 OI_RE = re.compile(r"\bOI-\d+\b")
+BARE_ID_RE = re.compile(r"(?<![\w\-–])(?:UC|NF|LD|DD|EV|AD|SD|R|E|W|I)\d{1,2}(?![\w-])")  # a range's end ("CORE-R5–R7") is not bare
 OI_COLUMNS = ["Id", "Question", "Raised in", "Blocks", "Decide by", "Owner",
               "Recommendation", "Assumption in force"]
 MODES = {"gated", "auto until design done", "auto until feature done", "auto until done"}
@@ -146,6 +147,20 @@ def check_chunk_order(path, header, rows):
                                 "chunk after the chunks it depends on (run-modes.md, Splitting by feature)")
 
 
+def check_prefixes(path):
+    """In a set split by feature, every id but OI carries its area's code."""
+    fenced = False
+    for n, line in enumerate(path.read_text().splitlines(), 1):
+        if line.lstrip().startswith("```"):
+            fenced = not fenced
+        if fenced:
+            continue
+        bare = sorted(set(BARE_ID_RE.findall(re.sub(r"`[^`]*`", "", line))))
+        if bare:
+            report(path, n, f"id(s) without an area prefix: {', '.join(bare)} — in a set split by "
+                            "feature every id but OI carries its area's code (documents.md, Ids)")
+
+
 def git(root, *args):
     try:
         r = subprocess.run(["git", "-C", str(root), *args], capture_output=True, text=True)
@@ -244,6 +259,9 @@ def main(argv):
             for oi in sorted(set(OI_RE.findall(line)) - open_ids):
                 report(path, n, f"cites {oi}, which is not an open item: cite the decision that settled it")
     plan = docs / "plan.md"
+    if plan.exists() and re.search(r"^Size: split by feature", plan.read_text(), re.M):
+        for path in step_docs:
+            check_prefixes(path)
     if plan.exists():
         check_plan(plan)
     else:

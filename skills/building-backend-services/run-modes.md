@@ -45,7 +45,8 @@ The gate of the run's first phase 0, after its review, is one message:
 
 - the size and, when split, the chunk plan, for the user to approve;
 - the hard-to-reverse unknowns that neither the requirements nor
-  `context.md` settle — the deployment target, a constraint on the stack,
+  `context.md` settle (a convention it records settles one: follow it) —
+  the deployment target, a constraint on the stack,
   the datastore family, paid external services — each with your
   recommendation, never "decide later" or "none": an auto run never decides
   these alone, because overruling one after the run is a rewrite. For the

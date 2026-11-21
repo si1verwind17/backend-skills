@@ -54,8 +54,8 @@ ahead of an unreviewed deliverable.
 3. **Agent review** — an independent reviewer (below), given your
    consistency findings as a written list, then the reviewer re-verifies the
    fixes to its blocking findings: a fresh one in the foreground, given the
-   original findings' full text — never just their ids — or, interactively,
-   the same one continued; a verdict is only what a reviewer returned. A
+   original findings' full text — never just their ids, never the first one
+   resumed in the background; a verdict is only what a reviewer returned. A
    reviewer's suggestion is checked against your own rules before you apply
    it — in a change, it adds only what the request asked; anything more is
    an open item, or an `agent` row awaiting approval (documents.md, Ids).
@@ -124,7 +124,7 @@ the paths of the document, this skill, `documents.md` and the phase skill.
 Otherwise, if the environment lets you start another agent, start it — a non-interactive run is not a reason to
 skip the review: *not being able to ask the user* is different from *not
 being able to dispatch*. Wait for the reviewer's result before going on —
-in the foreground, or on its notification, never a background timer: a run that ends its
+in the foreground, or on its notification, never a timer, sleep or monitor loop: a run that ends its
 turn while its reviewer works has stopped mid-cycle, not at a gate.
 
 **Settle the reviewer channel once, then carry it.** Some environments gate
@@ -170,8 +170,7 @@ with the next-step line (see Driving the chain with workers), then end by
 last line — with
 `rendering-design-docs`
 ([skills/rendering-design-docs/SKILL.md](../rendering-design-docs/SKILL.md));
-recommend yes at the phase 3 → 4 gate, where the user reviews the whole
-design set before implementation. On yes, render it, open it through
+recommend yes at the phase 3 → 4 gate, before implementation. On yes, render it, open it through
 whatever file/notification channel the environment offers, and still stop
 at the gate. Then wait: stopping the turn is the notification — never poll,
 remind, or auto-proceed on silence; an unattended run simply ends at the
@@ -192,9 +191,8 @@ presentation *is* the final output — and it still ends with the render
 question and the blocking open items, however short the reply format the
 task asked for. Implementing against an unapproved
 deliverable is the exact failure this skill exists to prevent. Red flags
-that mean stop: "the draft is basically done", "I recorded the question so
-I can proceed", "nobody can approve anyway", "I'll implement now and they
-can review both together".
+that mean stop: "the draft is basically done", "nobody can approve anyway",
+"I'll implement now and they can review both together".
 
 **Every run works on a local branch** — a phase, a change, or only
 writing rulings down. Before the run's first commit,
@@ -452,8 +450,8 @@ before drafting, before fixing, before any phase work — and record its
 findings as an explicit list in your gate presentation (not as fixes
 silently discovered later). Walk **every item below against every
 document in the set, approved ones included**, and report each item with
-its result, "clean" included — a pass that only checks the phase you are
-about to work on is not this pass:
+its result, "clean" included (an item whose condition is absent is left
+out) — a pass that only checks the phase you are about to work on is not this pass:
 
 - [ ] Every entity in the ER diagram exists in `data-dictionary.yaml` and
       `ddl/`, column-for-column (in `Form: built`: in the migrations or
