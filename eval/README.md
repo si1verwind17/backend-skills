@@ -16,7 +16,7 @@ proves it changes anything.
 | [`backend-architecture`](backend-architecture/README.md) | ticketing on GCP, delivery tracking on AWS |
 | [`backend-stack-selection`](backend-stack-selection/README.md) | two services on an existing Scala estate |
 | [`backend-code-conventions`](backend-code-conventions/README.md) | cancel-order in Python and Scala, config pressure |
-| [`rendering-design-docs`](rendering-design-docs/README.md) | tabbed review page, an active change |
+| [`rendering-design-docs`](rendering-design-docs/README.md) | tabbed review page, an active change, changes since approval |
 
 ## Protocol
 

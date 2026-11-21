@@ -20,7 +20,8 @@ hand-edited, and never read by agents.
 
 `design-review.html`, written beside the doc set it renders (the same
 `docs/backend-design/` — or the repo-root docs dir when rendering a
-multi-service system view). It is generated on demand and never committed:
+multi-service system view; in a set split by feature, the folder of the
+chunk at the gate, see The sources). It is generated on demand and never committed:
 add it to `.git/info/exclude` the first time (see `documents.md` in the
 `building-backend-services` skill folder). One file:
 
@@ -76,7 +77,9 @@ add it to `.git/info/exclude` the first time (see `documents.md` in the
   <a class="tab" data-tab="requirements" href="#requirements"><span class="tn">0</span><span class="tl">Requirements</span> <span class="badge APPROVED">APPROVED</span></a>
   <a class="tab gate" data-tab="data" href="#data"><span class="tn">1</span><span class="tl">Data design</span> <span class="badge REVIEWED">REVIEWED</span> <span class="chip gate">Gate</span></a>
   <!-- a step tab the change touches adds, after its badge: <span class="touched"></span><span class="vh">touched by the change</span> -->
+  <!-- an APPROVED step tab with changes since its approval adds the same marker, with <span class="vh">changes since approval</span> -->
   <span class="spacer"></span>
+  <a class="tab context" data-tab="plan" href="#plan">Plan</a>                 <!-- only with plan.md -->
   <a class="tab context" data-tab="context" href="#context">Context</a>        <!-- only with context.md -->
 </nav>
 <main>
@@ -91,6 +94,10 @@ add it to `.git/info/exclude` the first time (see `documents.md` in the
         <h4>Phase 4 · Implementation · no tab</h4><ul>                           <!-- items with no tab are defined here -->
           <li><details id="OI-4"><summary><span class="oi-id">OI-4</span> …question…</summary><dl>…owner, recommendation, assumption…</dl></details></li></ul>
       </div>
+    </section>
+    <section class="owed"><h2>Changes since approval</h2>      <!-- only for an APPROVED document changed since its approval -->
+      <p>Since APPROVED · 2026-08-14 · commit 1a2b3c4</p>
+      <ul><li>2026-08-20 · Record the grace-period ruling · adds <a class="idref" href="#R4">R4</a>, changes <a class="idref" href="#R2">R2</a></li></ul>
     </section>
     <div class="doc">
       <h1>…</h1><p class="header-lines">Status: …
@@ -117,9 +124,23 @@ panel opens with `<p class="context-note">Background the steps read: …</p>`.
 Read `docs/backend-design/`: the step documents (`requirements.md`,
 `data-design.md` + `data-dictionary.yaml` + `ddl/` or `schema/`,
 `architecture-design.md`, `stack-selection.md`), `open-items.md`,
-`context.md`, and any file under `changes/`. Each step document's status
-comes from its own `Status:` line; each open item's step from its `Blocks`
-and `Decide by` columns. Phases map to tabs as phase 0 = Requirements,
+`plan.md`, `context.md`, and any file under `changes/`. Each step
+document's status comes from its own `Status:` line; each open item's step
+from its `Blocks` and `Decide by` columns.
+
+**A set split by feature** (`plan.md` lists several chunks) gets one page
+per chunk: the foundation's step documents at the root, or one area's in
+`<area>/`, with the page beside them; `open-items.md`, `plan.md` and
+`context.md` always come from the root. An id defined in another area
+links to that area's page, relative to this one
+(`../design-review.html#CORE-R3`, `stock/design-review.html#STK-W2`).
+
+**Changes since approval.** For each APPROVED document, its approval's
+commit is the last commit that set its current `Status:` line
+(`git log -1 --format=%h -S'<that line>' -- <document>`); the commits since
+it that touch the document (`git log <commit>..HEAD -- <document>`), and
+any uncommitted edits to it, are its changes since approval. Outside a git
+repository, there are none to show. Phases map to tabs as phase 0 = Requirements,
 phase 1 = Data design, phase 2 = Architecture, phase 3 = Stack selection;
 phase 4 (implementation) has no tab — its items go to the gate tab's
 "later steps" list.
@@ -133,7 +154,8 @@ phase 4 (implementation) has no tab — its items go to the gate tab's
 2. **Tabs**, in this order:
    - **Change** — first, only while a file under `changes/` exists: the
      change file rendered, with the ids it touches linked; the step tabs it
-     touches carry a marker.
+     touches carry a marker. An APPROVED document with changes since its
+     approval carries the same marker on its tab.
    - **One tab per step that has a document**, in chain order:
      Requirements, Data design, Architecture, Stack selection. A step with
      no document has no tab (rendered after phase 1: two tabs). Each tab
@@ -141,15 +163,18 @@ phase 4 (implementation) has no tab — its items go to the gate tab's
      name and its status badge (DRAFT /
      REVIEWED / APPROVED, from the document's `Status:` line). There is no
      implementation tab.
+   - **Plan** — after the step tabs, only when `plan.md` exists, styled
+     like Context, with no number and no status badge: the plan as written.
    - **Context** — last, only when `context.md` exists, set apart from the
      step tabs (a gap or divider, a different style), with no number and
      no status badge. Its content opens with: *"Background the steps read:
      the existing environment, constraints, conventions, warts. Not a
      design step and not approved here."*
 3. **Which tab opens.** The step at the gate: the earliest step tab whose
-   document is not APPROVED, or the last step tab when all are approved.
+   document is not APPROVED or has changes since approval, or the last step
+   tab when none is.
    Each tab has its own URL hash (`#requirements`, `#data`,
-   `#architecture`, `#stack`, `#change`, `#context`); a link with a hash
+   `#architecture`, `#stack`, `#change`, `#plan`, `#context`); a link with a hash
    opens that tab; an unknown hash opens the gate tab.
 4. **Inside a step tab, in order:**
    - **Decisions owed at this step** — the open items whose `Blocks` or
@@ -159,6 +184,13 @@ phase 4 (implementation) has no tab — its items go to the gate tab's
      one line each (id and question), grouped under one heading per phase;
      an item whose step has no tab keeps its owner, recommendation and
      assumption folded under that line.
+   - **Changes since approval** — only for an APPROVED document that has
+     any: the approval it counts from (the `Status:` line's date and the
+     commit), then one line per commit, newest first — its date, its
+     subject, and the ids it adds, changes or removes in this document,
+     each linked (a removed id unlinked) — and uncommitted edits as a last
+     line. List what changed; never judge whether a change needs approval:
+     the gate message says that.
    - **The document**, faithfully: all headings, tables, and lists;
      every Mermaid block as a diagram; SQL, schemas and code in
      syntax-styled code blocks; the data tab includes the dictionary and
@@ -202,6 +234,10 @@ phase 4 (implementation) has no tab — its items go to the gate tab's
       missing step; no implementation tab; Change tab first only when a
       `changes/` file exists; Context tab last and visibly not a step.
 - [ ] The gate tab opens by default; each tab's hash opens it.
+- [ ] Every APPROVED document changed since its approval carries the tab
+      marker and the Changes since approval list, one line per commit since
+      that approval; an unchanged document has neither. A Plan tab exactly
+      when `plan.md` exists.
 - [ ] Every open item appears on the tab of its `Blocks` / `Decide by`
       step (blocking first) or in the gate tab's "later steps" list; the
       banner appears exactly when a blocking item exists.
@@ -231,3 +267,6 @@ Write any generator script or scratch file outside the user's repository
 - Editing the HTML by hand to fix a content issue that belongs in the
   markdown.
 - Rendering a stale page at a gate — regenerate after every doc change.
+- Sorting changes into "needs approval" and "needs none" on the page —
+  that is a judgment, and the gate message makes it; the page lists what
+  changed.

@@ -1,6 +1,6 @@
 # Evaluations: rendering-design-docs
 
-The review page: one tab per step document, decisions owed per tab, the blocking banner, the Change and Context tabs, links between ids, faithful content.
+The review page: one tab per step document, decisions owed per tab, the blocking banner, the Change, Plan and Context tabs, changes since approval, links between ids, faithful content.
 
 ## Scenarios
 
@@ -8,6 +8,7 @@ The review page: one tab per step document, decisions owed per tab, the blocking
 |---|---|
 | [1](scenarios/1-locker-rental-tabs.md) | four step documents, open items and context: tabs, gate tab, banner |
 | [2](scenarios/2-active-change.md) | an active change with two step documents: the Change tab and touched markers |
+| [3](scenarios/3-changes-since-approval.md) | approved documents with a change since approval, and a plan: the changes list, its marker, the gate tab, the Plan tab |
 
 ## Pending validation
 
