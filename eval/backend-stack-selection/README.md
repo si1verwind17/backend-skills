@@ -10,6 +10,7 @@ Stack selection: the existing stack first, shape mismatches, researched and cite
 
 ## Pending validation
 
+- `509fbe0` — the checklist asks rows only for elicitation questions the requirements, `context.md` and the repo leave open; what the document chooses itself (framework, runtime, pinned versions) is an `agent` SD row. Validates on scenario 1, and on building-backend-services scenario 9.
 - `13b64fb` — open items hold assumptions about the team, the estate or the budget; SD rows name who decided. Validates on scenario 1.
 
 ## Latest results

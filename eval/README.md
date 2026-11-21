@@ -42,7 +42,9 @@ proves it changes anything.
   `--disallowedTools ScheduleWakeup`. A run that dispatches its reviewer in the background
   may otherwise schedule a fallback wakeup (often 20 minutes); `claude -p` then stays alive after its final reply,
   waiting for that wakeup, and would re-run its prompt when it fires. Set a timeout anyway; a run that idles after
-  replying can be stopped and its reply taken from its transcript.
+  replying can be stopped and its reply taken from its transcript. Give each run its own `/tmp` (for example
+  `bwrap --dev-bind / / --tmpfs /tmp --bind <claude temp dir> <claude temp dir> claude -p …`): runs write generator
+  scripts to `/tmp`, and a parallel rep that finds one reuses it.
 - **Parallel runs share a machine.** Give each run its own ports and process names when a scenario starts servers
   (cold-start probes, test databases), or one run kills or skews another.
 - **When to run.** At creation (both arms); after any substantive edit (skill arm; control too if checks changed);
