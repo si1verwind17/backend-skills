@@ -33,11 +33,16 @@ with no card handling. Copy into <workdir>, `git init` and commit on `main`.
    decision is an open item naming both; R4's text and `requirements.md`'s
    Status line are unchanged; no design document claims a card refund.
 5. **Design choices decided**: technical choices (keys and indexes,
-   idempotency, cache, framework, versions) are decision rows marked `agent`;
-   `open-items.md` gains no row an engineer would answer.
+   idempotency, cache, framework, versions, the service split, events,
+   instance counts, the auth mechanism) are decision rows marked `agent`;
+   `open-items.md` gains no row for such a choice, none for a minor review
+   finding, and none for a fact `context.md` records (cloud, platform,
+   database, language). A question about an outside system's contract (the
+   wallet's, the vendor's) may be a row.
 6. **New documents not approved**: the three new documents read
    `Status: REVIEWED` (or DRAFT), never APPROVED.
-7. **The stop's sitting**: one final message listing the agent's decisions
-   first, then the open items (blocking first); it asks the run mode for
-   implementation and ends with the render question.
+7. **The stop's sitting**: one final message with the blocking items before
+   the rest, the agent's decisions listed as changes awaiting approval, the
+   question of the run mode for implementation, and the render question
+   last.
 8. **Plan updated**: `plan.md`'s chunk state reads `awaiting approval`.
