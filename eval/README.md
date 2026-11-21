@@ -44,7 +44,15 @@ proves it changes anything.
   waiting for that wakeup, and would re-run its prompt when it fires. Set a timeout anyway; a run that idles after
   replying can be stopped and its reply taken from its transcript. Give each run its own `/tmp` (for example
   `bwrap --dev-bind / / --tmpfs /tmp --bind <claude temp dir> <claude temp dir> claude -p …`): runs write generator
-  scripts to `/tmp`, and a parallel rep that finds one reuses it.
+  scripts to `/tmp`, and a parallel rep that finds one reuses it. Bind only the benchmark folder
+  (`bwrap --dev-bind / / --tmpfs /tmp --bind <bench> <bench> --tmpfs <live repo> claude -p …`), not a shared temp root,
+  and hide the live repository: a run folder whose path names the repository lets a reviewer find and read the live
+  skill instead of the frozen copy.
+  Disable the user's hooks in the run settings (`"disableAllHooks": true`): a hook that rewrites
+  command output (a token-saving proxy, say) changes what the run sees. Never edit the runner script while
+  runs execute it: `sh` reads a script as it goes, and a run finishing after the edit executes a fragment
+  of a shifted line (write a new runner instead). Runs that load DDL into a throwaway database may reuse
+  fixed container names; check the judges' notes for one run touching another's container.
 - **Parallel runs share a machine.** Give each run its own ports and process names when a scenario starts servers
   (cold-start probes, test databases), or one run kills or skews another.
 - **When to run.** At creation (both arms); after any substantive edit (skill arm; control too if checks changed);

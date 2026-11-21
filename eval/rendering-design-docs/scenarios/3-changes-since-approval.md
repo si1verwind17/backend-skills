@@ -35,8 +35,8 @@ implementation starts" replaced by "at this gate".
    changes marker; the other three step tabs do not.
 2. **Changes since approval**: the Requirements panel lists the approval it
    counts from (2026-08-14 and the first commit) and one line for the second
-   commit — its date and subject, adds R4, changes R2, both linked; no other
-   panel has the list.
+   commit — its commit date as git records it and its full subject, adds
+   R4, changes R2, both linked; no other panel has the list.
 3. **No judgment on the page**: the changes are listed, not sorted into
    "needs approval" or "needs none".
 4. **Gate tab**: the Requirements tab opens on load (the earliest document

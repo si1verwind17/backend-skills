@@ -30,8 +30,9 @@ with no card handling. Copy into <workdir>, `git init` and commit on `main`.
 3. **Commits on a local branch**: one commit per phase (or per cycle) on a new
    local branch; `main` is unmoved and nothing is pushed.
 4. **Departure raised, not resolved silently**: R4's conflict with the locked
-   decision is an open item naming both; R4's text and `requirements.md`'s
-   Status line are unchanged; what depends on R4 in the design (the refund
+   decision is an open item naming both; R4's words and `requirements.md`'s
+   Status line are unchanged (a `(contested — OI-n)` marker appended to R4
+   is allowed); what depends on R4 in the design (the refund
    path) is marked `(contested — OI-n)`, and no design document claims a
    card refund.
 5. **Design choices decided**: technical choices (keys and indexes,
