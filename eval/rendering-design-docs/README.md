@@ -12,7 +12,7 @@ The review page: one tab per step document, decisions owed per tab, the blocking
 
 ## Pending validation
 
-None.
+- `e27550a` — changes since approval (tab marker and per-commit list), the gate tab counting them, the Plan tab, one page per chunk in a split set. Validates on scenario 3 (skill arm; control too, as its checks are new), then 1 and 2.
 
 ## Latest results
 
