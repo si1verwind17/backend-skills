@@ -164,8 +164,10 @@ which phase completed, where the deliverable lives, the review findings
 with their dispositions, the changes since each approved document's last
 approval in two groups — awaiting approval, then the ones that need none
 (documents.md) — and the open items awaiting the user as one-liners
-(blocking first) — depth lives in the documents, not the message. End it
-by **asking whether to render the review page and open it** with
+(blocking first) — depth lives in the documents, not the message. Close
+with the next-step line (see Driving the chain with workers), then end by
+**asking whether to render the review page and open it** — always the
+last line — with
 `rendering-design-docs`
 ([skills/rendering-design-docs/SKILL.md](../rendering-design-docs/SKILL.md));
 recommend yes at the phase 3 → 4 gate, where the user reviews the whole
@@ -252,12 +254,15 @@ A small project compresses phases, never skips their *content*.
 
 **Splitting by feature.** Read the whole input once, only to write the
 feature map into `plan.md`: every feature the input names, scheduled now or
-later, and the order between them. What every feature needs — identity,
-access, audit, a shared write pattern, notifications, whatever the input
-makes cross-cutting — is the **foundation** chunk: phase 0 writes the
+later, and the order between them. What every feature needs — the
+input's cross-cutting features, whole (accounts and roles, notifications),
+plus identity, access, audit and a shared write pattern where the input
+implies them — is the **foundation** chunk: phase 0 writes the
 foundation's requirements and the map, and the foundation runs the whole
-chain first, stack selection included. Then each scheduled feature is a
-chunk, in the map's order: phase 0 for its area (the input's sections for
+chain first, stack selection included. The foundation's requirements meet
+the same budget; one that doesn't fit is too broad. Then each other
+scheduled feature the input names is its own chunk — never merged with
+another — in the map's order: phase 0 for its area (the input's sections for
 that feature), then phases 1, 2 and 4 — phase 3 only when it needs a
 library or runtime the stack lacks. A feature scheduled for later is
 listed in the map and designed when its turn comes, never modelled ahead.
@@ -285,7 +290,25 @@ review — is one message:
   ("may stop early if a requirement can't be built as written, a blocking
   question parks every remaining chunk, or a step needs money, an external
   account, a push or a deploy");
-- the render question.
+- the render question, last.
+
+Use this shape, so no part is dropped:
+
+```markdown
+**Size:** split by feature — <why: the requirements for what is built now vs the budget>
+| Chunk | Covers | Depends on | State |          ← when split
+**Unknowns to settle before any auto run** (not settled by the requirements or context.md):
+| Unknown | Recommendation | Why |
+**Run mode** — gated until you choose:
+| Mode | Stops | |
+| Gated | at every phase gate | |
+| Auto until design done | before any code | recommended: <why> |
+| Auto until feature done | after each chunk is built | ← only when split |
+| Auto until done | after the last chunk | |
+An auto run may still stop early if <the stop line>.
+next: step 2/<total> — <skill> (<chunk>)
+Render the review page and open it?
+```
 
 Then stop. Record the size, the chunks and the chosen mode in `plan.md`;
 the user may change the mode at any later stop. When the user chose a mode
@@ -449,9 +472,9 @@ a change entering at phase 0 that runs phases 0, 1, 2 and 4 is `step k/4`),
 so the environment's task list shows
 both the current step and how many remain; in a project split by feature,
 name the chunk too — `<project> — <chunk> — step <k>/<total>: <skill-name>`,
-the total counting that chunk's phases. Gate presentations end the same
-way: "next: step <k+1>/<total> — <skill>" so the user always knows what
-approval unlocks. This matches the architecture: the documents are the
+the total counting that chunk's phases. Gate presentations carry the same
+line, just before the render question: "next: step <k+1>/<total> —
+<skill>" so the user always knows what approval unlocks. This matches the architecture: the documents are the
 interface between phases, each phase re-reads them, and gates sit
 naturally at worker boundaries. A single agent running several phases
 in an auto mode cannot surface per-phase task lines — it should emit a
