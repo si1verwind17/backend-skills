@@ -64,7 +64,9 @@ ahead of an unreviewed deliverable.
    available is an unfinished cycle — run it, then present.
 4. **Open items** — every question the phase leaves, and every review
    finding queued for the user, goes into `open-items.md`. Commit the
-   phase's work on the run's branch, the review's result in the message.
+   phase's work on the run's branch once its review is re-verified — one
+   commit per cycle, no draft or fix-round commits — the review's result
+   in the message.
 5. **User gate** — the user approves the deliverable — a new document, or
    the changes since a document's last approval — or sends it back, and
    rules on open items. Approving a new document sets its header to
@@ -276,9 +278,10 @@ review — is one message:
   recommend the constraint — a language or platform, from the team and the
   estate; phase 3 still selects the full stack within it;
 - the run modes that differ for this project — all four when split by
-  feature, three otherwise (for one chunk, auto until feature done is auto
-  until done) — one recommended with one line of why, and one short line
-  of when an auto run would still stop
+  feature; otherwise always these three: gated, auto until design done,
+  auto until done (for one chunk, auto until feature done is auto until
+  done) — each named with where it stops, one recommended with one
+  line of why, and one short line of when an auto run would still stop
   ("may stop early if a requirement can't be built as written, a blocking
   question parks every remaining chunk, or a step needs money, an external
   account, a push or a deploy");
@@ -325,7 +328,8 @@ stop.
 **The stop's sitting** is one message, per chunk: the blocking open items
 and the parked chunks with why; the changes awaiting approval, the agent's
 decisions first; the other open items — then, after auto until design
-done, the run mode for implementation, and last the render question. The
+done, the run mode for implementation, offered and recommended as at the
+start sitting, and last the render question. The
 user approves changes,
 rules on items, and may overrule an agent decision; an overrule is a
 change for the next run, through triage when code exists.

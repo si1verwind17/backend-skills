@@ -19,8 +19,9 @@ change touches:
 
 From its entry phase, a change runs every downstream phase it actually
 touches and skips the rest; each phase it runs goes through the full cycle,
-and its gates follow the run mode `plan.md` records (none recorded: the
-change's first gate asks it). Edits to approved documents are changes
+and its gates follow the run mode the user chose, as `plan.md` records it
+(none chosen — including a `plan.md` you just created — the change's first
+gate asks it). Edits to approved documents are changes
 since their approval (documents.md) — the documents keep `APPROVED`.
 **A change adds only what the request states.** The rules and use
 cases it adds are the ones the requester asked for; everything you infer

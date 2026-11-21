@@ -213,7 +213,8 @@ phase 4 (implementation) has no tab — its items go to the gate tab's
   content decision is not.
 - Numbers, versions, and statuses appear exactly as in the sources; each
   document's header keeps its lines (`Status`, `Form`, `Builds on` on lines
-  of their own).
+  of their own, and `plan.md`'s `Size`, `Run mode`, `Reviewer` likewise —
+  in a `<p class="header-lines">`).
 - A source doc that is missing or unparseable is shown as such in the
   header — not silently skipped.
 - The markdown files are not modified by rendering, ever.

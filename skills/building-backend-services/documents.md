@@ -43,7 +43,7 @@ on the run's branch — the changes are the diff since the approval's commit
 | Change | Approval |
 |---|---|
 | Adds or changes what the document states: a rule, a decision, an entity, a contract, a figure | awaits the user's approval, at the next gate or stop |
-| Writes down a ruling as the user gave it; fixes a gap (says what approved artifacts already say); re-points citations | needs none — the ruling, or the approved artifacts, already decided it; listed for information |
+| Writes down a ruling as the user gave it; fixes a gap (says what approved artifacts already say); re-points citations; adds a missing id or a `(contested — OI-n)` marker | needs none — the ruling, or the approved artifacts, already decided it; listed for information |
 | Would change what an approved decision says | never made: an open item, the approved text in force (SKILL.md, Backtracking) |
 
 Approving the changes moves the document's stamp to the approval's date.
@@ -150,7 +150,8 @@ Reviewer: agent dispatch | declared self-review (<reason>)
 | trips | TRP | the input's trips sections | foundation | later |
 ```
 
-`Run mode` reads `gated` until the user chooses. `State` is one of
+`Run mode` reads `gated` until the user chooses, and every gate asks it
+until then: a mode you wrote while creating `plan.md` is not a choice. `State` is one of
 `later` (a feature the input schedules for a later release only), `to do`
 (scheduled, not started), `in design`, `awaiting approval` (an auto mode stopped
 with its changes unapproved), `design approved`, `building`, `built`,
