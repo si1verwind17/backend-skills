@@ -3,9 +3,11 @@
 
 Usage:
   python3 check_docs.py [docs-dir]          the self-check (default docs-dir: docs/backend-design)
-  python3 check_docs.py --gate [docs-dir]   before presenting a gate or a stop: adds the git checks
+  python3 check_docs.py --gate [docs-dir]   before presenting a gate or a stop: adds the git checks,
+                                            then names the shape to present in
 
 Prints one line per finding (path:line: message) and exits 1 when there is any.
+With --gate and no finding, prints the shape of the message this gate presents.
 Standard library only; the git checks run when docs-dir is inside a git repository.
 What it cannot judge (whether a change needs approval, whether a decision is
 sound) stays with the author and the agent review.
@@ -129,19 +131,29 @@ def git(root, *args):
     return r.stdout if r.returncode == 0 else None
 
 
+def head_line(path, key):
+    return next((l for l in path.read_text().splitlines()[:8] if l.startswith(key)), "")
+
+
 def check_git(docs, step_docs, gate):
+    """Returns the step documents that are, or once were, APPROVED."""
+    approved = {p for p in step_docs if head_line(p, "Status:").startswith("Status: APPROVED")}
     if git(docs, "rev-parse", "HEAD") is None:
         if gate:
             report(docs, 0, "not in a git repository with a commit: commit the work on a local branch")
-        return
+        return approved
     for path in step_docs:
-        status = next((l for l in path.read_text().splitlines()[:8] if l.startswith("Status:")), "")
         ever = git(docs, "log", "--format=%h", "-G", "^Status: APPROVED", "--", str(path.resolve()))
-        if ever and ever.strip() and not status.startswith("Status: APPROVED"):
+        if ever and ever.strip() and path not in approved:
             report(path, 1, "this document was APPROVED: an edit keeps its Status line "
                             "(documents.md, Changes since an approval)")
+            approved.add(path)
     if not gate:
-        return
+        return approved
+    for path in step_docs:
+        if head_line(path, "Status:").startswith("Status: DRAFT"):
+            report(path, 1, "a gate presents reviewed documents: Status reads REVIEWED once the "
+                            "review's fixes are re-verified (SKILL.md, cycle step 3)")
     branch = (git(docs, "branch", "--show-current") or "").strip()
     if branch in ("main", "master", ""):
         report(docs, 0, f"on '{branch or 'a detached HEAD'}': every run — recording a ruling included — "
@@ -149,6 +161,34 @@ def check_git(docs, step_docs, gate):
     dirty = git(docs, "status", "--porcelain", "--", str(docs.resolve()))
     if dirty and dirty.strip():
         report(docs, 0, "uncommitted changes: commit the phase's work, the review's result in the message")
+    return approved
+
+
+def template(heading):
+    text = (Path(__file__).resolve().parent / "run-modes.md").read_text()
+    section = text.split(heading, 1)[1]
+    return re.search(r"```markdown\n(.*?)```", section, re.S).group(1).rstrip()
+
+
+def print_shape(docs, step_docs, approved):
+    """Names the shape of the message this gate presents."""
+    plan = docs / "plan.md"
+    m = re.search(r"^Run mode: (.+)$", plan.read_text(), re.M) if plan.exists() else None
+    mode = m.group(1).strip() if m else "gated"
+    if mode.startswith("auto"):
+        print(f"Run mode: {mode}. A gate before this mode's stop passes on its own: present nothing "
+              "and go on to the next phase. At the stop, set each stopped chunk's plan.md state to "
+              "'awaiting approval' (or 'parked (OI-n)'), commit, then present the stop's sitting "
+              "(run-modes.md) in this shape:")
+        print(template("## The stop's sitting"))
+    elif not approved and not any(head_line(p, "Form:").strip() == "Form: built" for p in step_docs):
+        print("No document is approved yet: this gate is the start sitting (run-modes.md). "
+              "Present it in this shape, every part included:")
+        print(template("## The start sitting"))
+    else:
+        print("Present the gate as SKILL.md's 'Gate presentation is glanceable' says: the review "
+              "findings with dispositions, the changes since each approval in two groups, the open "
+              "items (blocking first), the next-step line, then the render question, last.")
 
 
 def main(argv):
@@ -177,9 +217,11 @@ def main(argv):
         check_plan(plan)
     else:
         report(plan, 0, "missing (documents.md, plan.md)")
-    check_git(docs, step_docs, gate)
+    approved = check_git(docs, step_docs, gate)
     for line in findings:
         print(line)
+    if gate and not findings:
+        print_shape(docs, step_docs, approved)
     return 1 if findings else 0
 
 

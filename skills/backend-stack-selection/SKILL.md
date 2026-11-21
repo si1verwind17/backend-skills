@@ -162,10 +162,13 @@ each pairing in the matrix.
 
 - [ ] Existing stack assessed first; alternatives appear only with a named
       concrete issue.
-- [ ] The header is present and exact; the elicitation questions (current
-      versions, licensing/budget, org standards) are rows in
-      `open-items.md` with stated assumptions — even when you proceeded
-      without answers — and no section of this document holds questions.
+- [ ] The header is present and exact; each elicitation question the
+      requirements, `context.md` and the repo leave open (the existing
+      estate's versions, licensing/budget, org standards) is a row in
+      `open-items.md` with its assumption, even when you proceeded without
+      answers; what this document chooses itself (framework, runtime, the
+      versions it pins) is an `SD` row marked `agent`, never a row; no
+      section of this document holds questions.
 - [ ] Every perishable claim (cold start, ecosystem maturity, versions) has
       a decision-time research citation, not a memory answer.
 - [ ] Every required integration has a verified mature library for the

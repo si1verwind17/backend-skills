@@ -61,20 +61,20 @@ ahead of an unreviewed deliverable.
    item.
    A never-approved document's header becomes `Status: REVIEWED` only
    after that re-verification (or straight away when the review found
-   nothing blocking). A gate
-   presentation that says "re-verification not run" while dispatch was
-   available is an unfinished cycle — run it, then present.
+   nothing blocking).
 4. **Open items** — every question the phase leaves, and every review
    finding queued for the user, goes into `open-items.md`. Commit the
    phase's work on the run's branch once its review is re-verified — one
    commit per cycle, no draft or fix-round commits — the review's result
-   in the message.
+   in the message: blocking findings fixed and re-verified, minor ones and
+   where they went.
 5. **User gate** — the user approves the deliverable — a new document, or
    the changes since a document's last approval — or sends it back, and
    rules on open items. Approving a new document sets its header to
    `Status: APPROVED · <date> · approved by <name>`; approving changes
-   moves the stamp to the new date. Writing a ruling down is not a new
-   change to approve: the ruling approved it. A **blocking** open item
+   moves the stamp to the new date. Writing a ruling down needs no new
+   approval — the ruling approved it — yet runs this whole cycle, review
+   included. A **blocking** open item
    must be decided before its phase's gate passes; a non-blocking one may
    carry forward, naming the phase that must decide it. In an auto mode,
    gates pass on their own until the mode's stop (see run-modes.md).
@@ -97,11 +97,8 @@ for a document approved before, the diff since its approval's commit.
 The reviewer must be **at least as capable as the phase author, and
 preferably the strongest agent available — never a weaker one** (a
 weaker reviewer rubber-stamps whatever reads plausibly, and a same-tier
-reviewer tends to share the author's blind spots); review is a bounded,
-read-mostly task, so spending the top agent here is cheap relative to
-what an error crossing a gate costs downstream. Mechanical contract
-checks may be scripted or delegated cheaply — the capability budget
-belongs to claims-vs-artifacts verification. Findings are dispositioned
+reviewer tends to share the author's blind spots) — review is a bounded,
+read-mostly task, cheap next to an error crossing a gate. Findings are dispositioned
 (fixed, or queued for the user's ruling) and the gate presentation
 lists them with their dispositions — the review sharpens the gate,
 never silently replaces it; the reviewer produces findings, not
@@ -156,16 +153,17 @@ miss, not a fix — the agent review ran, its blocking
 fixes were re-verified by the reviewer or another fresh agent until each
 is ruled SUFFICIENT — on every change set, the changes that need no
 approval included — every open question is a row in `open-items.md`, and
-`check_docs.py --gate` prints nothing (it checks the branch and that the
-work is committed) — or the presentation states why no agent could be
+`check_docs.py --gate` reports no finding (it checks the branch and that
+the work is committed, then prints the shape to present) — or the presentation states why no agent could be
 dispatched.
 "Re-verification skipped" is not a gate, and neither is a document left in
 DRAFT because a repaired fix was never sent back. That includes the last
 repair, however small: a one-line fix to a finding ruled INSUFFICIENT goes
 back to the reviewer before the header says REVIEWED.
 
-**Gate presentation is glanceable, then you stop.** One short message:
-which phase completed, where the deliverable lives, the review findings
+**Gate presentation is glanceable, then you stop.** One short message
+(phase 0's first gate and an auto mode's stop take the shapes in
+run-modes.md, which `check_docs.py --gate` prints): which phase completed, where the deliverable lives, the review findings
 with their dispositions, the changes since each approved document's last
 approval in two groups — awaiting approval, then the ones that need none
 (documents.md) — and the open items awaiting the user as one-liners

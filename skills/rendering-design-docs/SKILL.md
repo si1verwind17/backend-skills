@@ -139,7 +139,9 @@ links to that area's page, relative to this one
 commit is the last commit that set its current `Status:` line
 (`git log -1 --format=%h -S'<that line>' -- <document>`); the commits since
 it that touch the document (`git log <commit>..HEAD -- <document>`), and
-any uncommitted edits to it, are its changes since approval. Outside a git
+any uncommitted edits to it, are its changes since approval; a commit's ids
+are those whose lines its diff of the document (`git show <commit> --
+<document>`) adds, changes or removes. Outside a git
 repository, there are none to show. Phases map to tabs as phase 0 = Requirements,
 phase 1 = Data design, phase 2 = Architecture, phase 3 = Stack selection;
 phase 4 (implementation) has no tab — its items go to the gate tab's
@@ -237,7 +239,8 @@ phase 4 (implementation) has no tab — its items go to the gate tab's
 - [ ] The gate tab opens by default; each tab's hash opens it.
 - [ ] Every APPROVED document changed since its approval carries the tab
       marker and the Changes since approval list, one line per commit since
-      that approval; an unchanged document has neither. A Plan tab exactly
+      that approval, each naming the ids it adds, changes or removes; an
+      unchanged document has neither. A Plan tab exactly
       when `plan.md` exists.
 - [ ] Every open item appears on the tab of its `Blocks` / `Decide by`
       step (blocking first) or in the gate tab's "later steps" list; the

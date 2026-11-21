@@ -99,8 +99,9 @@ stop.
   row marked `agent`, with one line of why; never as an open item;
 - **follows the requirements**: where one doesn't make sense, can't be
   built as written, or hits a limitation, it opens an item, marks what
-  depends on it `(contested — OI-n)` without redefining the requirement,
-  and designs the rest; it parks the chunk only when the chunk's core
+  depends on it `(contested — OI-n)` — the path that builds the assumption
+  in force included — without redefining the requirement, and designs the
+  rest; it parks the chunk only when the chunk's core
   depends on the item. A reviewer's judgment disagreement is an item too,
   the author's version in force;
 - **parks a chunk** on a blocking item and continues with the chunks that
@@ -116,7 +117,8 @@ stop.
 
 ## The stop's sitting
 
-One message, per chunk. The user approves changes, rules on items, and may
+First set each stopped chunk's state in `plan.md` to `awaiting approval`
+(or `parked (OI-n)`) and commit. Then one message, per chunk. The user approves changes, rules on items, and may
 overrule an agent decision; an overrule is a change for the next run,
 through triage when code exists. Use this shape:
 
