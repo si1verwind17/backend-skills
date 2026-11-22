@@ -18,12 +18,33 @@ Orchestration: the per-phase cycle and its gates, the shared document format, op
 
 ## Pending validation
 
-- `d106e0c` — an absent consistency-pass item is left out; re-verification always by a fresh foreground reviewer, never a timer, sleep or monitor loop; a convention `context.md` records settles a start-sitting unknown; `check_docs.py` flags unprefixed ids in a split set. Validated with Sonnet on 2, 7 and 9 (below): fresh foreground re-verification in 9 of 9 runs on 7 and 9, the gate as the final reply everywhere; the one check 5 miss came from `backend-architecture` asking the user whether to publish events, against `documents.md`; the owner ruled it an `agent` decision, fixed in `backend-architecture` at `a9c600b`.
-- `a7926d9` — fixes from the five-model round: `check_docs.py` flags chunk order against `Depends on` and a document committed in DRAFT; re-verification by a fresh foreground reviewer, a verdict only what a reviewer returned, no background timer; a consistency-pass item that every rule can be built as written within the locked decisions; each change grouped on its own; the reviewer reads the diff since approval itself; examples no longer hold eval data. Validated with Sonnet on 2, 4, 7, 8, 9 and rendering 3 (below); scenarios 1, 3, 5 and 6 not rerun.
-- `49c9f39` — fixes from the second round: every offered mode named, one chunk always gets three; a run mode written into a new `plan.md` is not a choice; one commit per phase cycle; the stop's sitting recommends the implementation mode; scenario 4 check 3 and scenario 9 checks 4 and 5 tightened. Validates on scenarios 2, 4 and 9 (skill arm), then 1 and 6 at the next demo run.
+- `e9a135d` — `check_docs.py --gate` prints the consistency-pass list as a gate's first part, and an import's gate gets its own parts (approve as they stand, "import", no step count); `code` is a decider for what an import records; a greenfield project has no estate to ask about. Validates on scenarios 1, 2, 3 and 5.
+- `49c9f39` — fixes from the second round. Validated on 1, 2, 4 and 9 (below); scenario 6 at the next demo run.
 - `6abb917` — a slice never changes an approved decision (not to match the code, not as a change for the re-approval to cover); the branch's first commit holds the approved design documents; under a waiver a blocking item passes the gate with the approved text in force. Validates on scenario 6 at the next demo run.
 
 ## Latest results
+
+### Release regression, Sonnet 5.5 at `7a5898b` / `34a7495`
+
+Every scenario the branch's changes touch (scenario 6 aside, graded on the demo run), three runs each, the plugin
+loaded, each run in a sandbox with a private `/tmp`, the live repository hidden and hooks off; graded by an
+independent judge on Opus 5.5. Building 4, architecture 1, stack selection 1 and requirements 1 ran at `7a5898b`;
+the rest at `34a7495`, after data design 1 showed a regression (an id's scope decided as an `agent` row, 23/27).
+
+| Skill | Scenario | Result | Before |
+|---|---|---|---|
+| building-backend-services | 1 / 2 / 3 / 4 / 5 | 26/30 · 25/27 · 22/24 · 18/18 · 13/15 | 10/10 · 26/27 · 15/16 · 18/18 · 10/10 |
+| building-backend-services | 7 / 8 / 9 | 21/21 · 21/21 · 23/24 | 21/21 · 21/21 · 23/24 |
+| backend-design-by-data | 1 | 25/27 (23/27 at 7a5898b) | 18/18 |
+| backend-architecture | 1 | 25/27 | 26/27 |
+| backend-stack-selection | 1 | 24/24 | 8/8 |
+| writing-business-requirements | 1 / 2 | 25/27 · 25/27 | 9/9 · 26/27 |
+| rendering-design-docs | 1 / 2 / 3 | 27/27 · 15/15 · 18/18 | 9/9 · 5/5 · 18/18 |
+
+Three misses came from the branch's own changes and are fixed in `e9a135d`, not yet rerun: the printed gate parts
+left out the consistency-pass list (scenario 1, 3/3) and gave an import's gate a step count (scenario 5, one run);
+the stack-constraint wording drew an estate question in a greenfield project (scenario 2, one run). The other misses
+are single runs in text the branch did not change.
 
 ### Models at `509fbe0`
 
@@ -55,18 +76,18 @@ was evaluated.
 
 | Scenario | Skill@ | Arm | Result | Notes |
 |---|---|---|---|---|
-| 1 | fcc1288 | skill (plugin) | 10/10 (1 run) | the author's own pass found seeds A and B; every blocking fix re-verified until SUFFICIENT (two rounds); reviewer given absolute paths; the brief listed findings only, not every pass item |
-| 2 | d106e0c | skill (plugin, Sonnet 5.5) | 26/27 (3 runs; 26/27 at a7926d9, 25/27 at 88f14b2) | the absent context named once 3/3 (the a7926d9 miss); one run asked for "estate standards" in a greenfield project; unscored: that run waited on its reviewers with polling loops, the gates do not list the consistency pass item by item |
-| 3 | 3d078c5 | skill | 15/16 (2 runs) | read plan first, full import under the threshold; comment intent beside a data-design row once |
+| 1 | 34a7495 | skill (plugin, Sonnet 5.5) | 26/30 (3 runs; 10/10 at fcc1288, 1 run) | all four seeds fixed and marked on both sides 3/3; check 1 missed 3/3: no consistency-pass list up front or at the gate (the printed gate parts left it out — fixed in e9a135d, not rerun); one run committed a repair never re-verified; two runs found real unplanted defects |
+| 2 | 34a7495 | skill (plugin, Sonnet 5.5) | 25/27 (3 runs; 26/27 at d106e0c and a7926d9) | one run asked for estate context in a greenfield project (run-modes' stack wording — fixed in e9a135d, not rerun); one named the absent context twice |
+| 3 | 34a7495 | skill (plugin, Sonnet 5.5) | 22/24 (3 runs; 15/16 at 3d078c5, 2 runs) | read plan row first, full import, code's behaviour as the rule 3/3; two runs restated the comment's intent in a `context.md` wart line; unscored: imported decision rows had no allowed decider (`code` added in e9a135d) |
 | 3 | — | control | 12/24 (3 runs) | caught the defect without fixing it, but no header, no `file:line`, questions scattered, DDL reconstructed |
-| 4 | a7926d9 | skill (plugin, Sonnet 5.5) | 18/18 (3 runs; 17/18 at 88f14b2) | Status kept, R4 awaiting approval, the out-of-scope line contested, run mode asked 3/3; unscored: one commit before re-verification (amended), edits after a SUFFICIENT ruling not sent back, stale change files |
-| 5 | e8db71d | skill (plugin) | 10/10 (2 runs) | plan row stays first; every blocking fix re-verified until SUFFICIENT; no decision row on README/config alone in one run, one borderline row in the other; residual: plan written after reading, an edit after a SUFFICIENT ruling not sent back, the author's pass under-reported the README item (the reviewer caught it) |
+| 4 | 7a5898b | skill (plugin, Sonnet 5.5) | 18/18 (3 runs; 18/18 at a7926d9) | fresh foreground reviewers, no timers 3/3; unscored: pre-existing blocking items left out of the gate's list, edits after a SUFFICIENT ruling not sent back |
+| 5 | 34a7495 | skill (plugin, Sonnet 5.5) | 13/15 (3 runs; 10/10 at e8db71d, 2 runs) | read plan row first, `not yet imported` areas, no seed read 3/3; one run grepped route decorators; one import gate wrote a step count and never asked for approval as they stand (printed gate parts — fixed in e9a135d, not rerun) |
 | 6 | 9bdae75 | skill (plugin) | 6/6 (1 run, checks 1–6; 7 and 8 added after it) | 291 tests re-run green from a fresh clone; every blocking fix re-verified until SUFFICIENT; review result in each slice commit; render offered; missed: approved decisions (W1, an API error code, SD10) rewritten in place during slices and re-approved under the waiver instead of an open item, requirements.md left uncommitted on the branch |
 | 2 | 88f14b2 | skill (plugin, Sonnet 4.6) | 23/27 (3 runs) | one chunk and three modes 3/3; the stack constraint answered "none" (2/3); review findings queued in the gate instead of open items (2/3) |
 
-| 7 | d106e0c | skill (plugin, Sonnet 5.5) | 21/21 (3 runs; 21/21 at a7926d9) | start sitting, chunk order, prefixed ids, fresh foreground re-verification, no timers, the gate as the final reply 3/3; unscored: suffixed ids (`CORE-R7a`) in one run, non-blocking items listed by id only |
-| 8 | a7926d9 | skill (plugin, Sonnet 5.5) | 21/21 (3 runs; 21/21 at 88f14b2, with the leaked example) | review of the change set, `check_docs.py`, consequences raised 3/3; the reviewer read the diff itself 3/3; unscored: a sequence diagram left disagreeing with the redrawn component diagram (3/3) |
-| 9 | d106e0c | skill (plugin, Sonnet 5.5) | 23/24 (3 runs; 22/24 at a7926d9, 21/24 at 88f14b2) | R4 raised and contested, REVIEWED commits, fresh foreground re-verification, no timers, the stop's sitting as the final reply 3/3; one run asked whether to publish events, as `backend-architecture` then told it to (since ruled an `agent` decision) |
+| 7 | 34a7495 | skill (plugin, Sonnet 5.5) | 21/21 (3 runs; 21/21 at d106e0c) | unscored: the consistency pass missed ownership and order gaps the reviewer then caught (3/3) |
+| 8 | 34a7495 | skill (plugin, Sonnet 5.5) | 21/21 (3 runs; 21/21 at a7926d9) | consequences raised 3/3; the mTLS-termination choice first drafted inside an open item (3/3; reviewers moved it in two) |
+| 9 | 34a7495 | skill (plugin, Sonnet 5.5) | 23/24 (3 runs; 23/24 at d106e0c) | R4 contested, fresh foreground reviewers, no timers 3/3; publishing events an `agent` row in two runs, tied to the paid-broker question in one; one run filed a minor finding as an open item |
 | 7 | — | control | 0/21 (3 runs) | a discovery note, no plan, no requirements document, no modes |
 | 8 | — | control | 5/21 (3 runs) | rulings left beside "RESOLVED" rows, citations kept, re-approval asked; check 6 passed by every control |
 | 9 | — | control | 6/24 (3 runs) | one combined design, no stack selection, no per-phase review, commits on main; checks 4 (as first worded) and 6 passed by every control |

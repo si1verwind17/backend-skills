@@ -11,7 +11,7 @@ Turning a fuzzy ask or a business brief into `requirements.md` and `open-items.m
 
 ## Pending validation
 
-- `13b64fb` — requirements split by feature past the budget, area-prefixed ids; a feature scheduled for a later release is named out of scope, never digested. Validates on scenario 2.
+- `13b64fb` — requirements split by feature past the budget, area-prefixed ids; later-release features named out of scope. Scenario 2 rerun at 34a7495 (below, no split needed); the split itself is validated through building scenario 7.
 
 ## Latest results
 
@@ -20,7 +20,7 @@ was evaluated.
 
 | Scenario | Skill@ | Arm | Result | Notes |
 |---|---|---|---|---|
-| 1 | 8772816 | skill | 9/9 (1 run) | the LD-sourced rule quotes the decision's words; no rule joins two obligations with "and"; non-goals only in §9 |
-| 2 | 7529ee4 | skill | 26/27 (3 runs) | every trap handled; one "clear conflict" in an acceptance criterion |
+| 1 | 7a5898b | skill (Sonnet 5.5) | 25/27 (3 runs; 9/9 at 8772816, 1 run) | two runs wrote an exclusion both as a rule and in §9; one sourced a rule to a locked decision whose words do not contain it |
+| 2 | 34a7495 | skill (Sonnet 5.5) | 25/27 (3 runs; 26/27 at 7529ee4) | every trap handled; two runs put several exclusions on one §9 line |
 | 1 | — | control | 10/40 (5 runs, earlier checks 1–8) | competent prose with none of the structure |
 | 2 | — | control | 16/40 (5 runs, earlier checks 1–8) | marketing phrases inside rules, design leakage |

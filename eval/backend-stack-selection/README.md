@@ -10,8 +10,7 @@ Stack selection: the existing stack first, shape mismatches, researched and cite
 
 ## Pending validation
 
-- `509fbe0` — the checklist asks rows only for elicitation questions the requirements, `context.md` and the repo leave open; what the document chooses itself (framework, runtime, pinned versions) is an `agent` SD row. Building scenario 9 across five models: framework and version rows mostly gone, but a version question still filed as an open item in three of fifteen runs. Validates on scenario 1.
-- `13b64fb` — open items hold assumptions about the team, the estate or the budget; SD rows name who decided. Validates on scenario 1.
+None: `509fbe0` and `13b64fb` validated on scenario 1 (below).
 
 ## Latest results
 
@@ -20,5 +19,5 @@ was evaluated.
 
 | Scenario | Skill@ | Arm | Result | Notes |
 |---|---|---|---|---|
-| 1 | 8772816 | skill | 8/8 (1 run) | pins checked against the poms they are built against (tapir → zio-json 1.0.0, zio-pubsub → google-cloud-pubsub 1.154.0); two services in one build pin different zio-json versions, unreconciled |
+| 1 | 7a5898b | skill (Sonnet 5.5) | 24/24 (3 runs; 8/8 at 8772816, 1 run) | existing stack kept, cold start weighed for the serverless service, pins exact; unscored: stale library coordinates (a moved group id) in two runs, a deployment choice as an SD row in one |
 | 1 | — | control | 33/40 (5 runs, earlier checks) | strong control; citations and pins were the gap |
