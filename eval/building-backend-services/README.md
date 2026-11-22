@@ -18,7 +18,6 @@ Orchestration: the per-phase cycle and its gates, the shared document format, op
 
 ## Pending validation
 
-- `e9a135d` — `check_docs.py --gate` prints the consistency-pass list as a gate's first part, and an import's gate gets its own parts (approve as they stand, "import", no step count); `code` is a decider for what an import records; a greenfield project has no estate to ask about. Validates on scenarios 1, 2, 3 and 5.
 - `49c9f39` — fixes from the second round. Validated on 1, 2, 4 and 9 (below); scenario 6 at the next demo run.
 - `6abb917` — a slice never changes an approved decision (not to match the code, not as a change for the re-approval to cover); the branch's first commit holds the approved design documents; under a waiver a blocking item passes the gate with the approved text in force. Validates on scenario 6 at the next demo run.
 
@@ -41,10 +40,12 @@ the rest at `34a7495`, after data design 1 showed a regression (an id's scope de
 | writing-business-requirements | 1 / 2 | 25/27 · 25/27 | 9/9 · 26/27 |
 | rendering-design-docs | 1 / 2 / 3 | 27/27 · 15/15 · 18/18 | 9/9 · 5/5 · 18/18 |
 
-Three misses came from the branch's own changes and are fixed in `e9a135d`, not yet rerun: the printed gate parts
-left out the consistency-pass list (scenario 1, 3/3) and gave an import's gate a step count (scenario 5, one run);
-the stack-constraint wording drew an estate question in a greenfield project (scenario 2, one run). The other misses
-are single runs in text the branch did not change.
+Three misses came from the branch's own changes and are fixed in `e9a135d`: the printed gate parts left out the
+consistency-pass list (scenario 1, 3/3) and gave an import's gate a step count (scenario 5, one run); the
+stack-constraint wording drew an estate question in a greenfield project (scenario 2, one run). Rerun at `e9a135d`:
+1 · 2 · 3 · 5 = 29/30 · 26/27 · 21/24 · 12/15, with the import gate, the consistency-pass list and the greenfield
+wording holding; the remaining misses are in text the branch did not change (the light pass, comment intent, the
+absent-context line).
 
 ### Models at `509fbe0`
 
@@ -76,12 +77,12 @@ was evaluated.
 
 | Scenario | Skill@ | Arm | Result | Notes |
 |---|---|---|---|---|
-| 1 | 34a7495 | skill (plugin, Sonnet 5.5) | 26/30 (3 runs; 10/10 at fcc1288, 1 run) | all four seeds fixed and marked on both sides 3/3; check 1 missed 3/3: no consistency-pass list up front or at the gate (the printed gate parts left it out — fixed in e9a135d, not rerun); one run committed a repair never re-verified; two runs found real unplanted defects |
-| 2 | 34a7495 | skill (plugin, Sonnet 5.5) | 25/27 (3 runs; 26/27 at d106e0c and a7926d9) | one run asked for estate context in a greenfield project (run-modes' stack wording — fixed in e9a135d, not rerun); one named the absent context twice |
-| 3 | 34a7495 | skill (plugin, Sonnet 5.5) | 22/24 (3 runs; 15/16 at 3d078c5, 2 runs) | read plan row first, full import, code's behaviour as the rule 3/3; two runs restated the comment's intent in a `context.md` wart line; unscored: imported decision rows had no allowed decider (`code` added in e9a135d) |
+| 1 | e9a135d | skill (plugin, Sonnet 5.5) | 29/30 (3 runs; 26/30 at 34a7495, 10/10 at fcc1288) | the consistency pass listed in the gate in two of three runs (none at 34a7495); all four seeds fixed and marked 3/3; unscored: one run resumed a reviewer and slept once |
+| 2 | e9a135d | skill (plugin, Sonnet 5.5) | 26/27 (3 runs; 25/27 at 34a7495) | no estate question, consistency pass listed 3/3; one run named the absent context twice, as before this branch |
+| 3 | e9a135d | skill (plugin, Sonnet 5.5) | 21/24 (3 runs; 22/24 at 34a7495, 15/16 at 3d078c5) | import gate (approve as they stand, "import", no step count), consistency pass listed and `code` deciders 3/3; misses are the old import ones: comment intent outside the open item (one run), read plan written after reading (one run) |
 | 3 | — | control | 12/24 (3 runs) | caught the defect without fixing it, but no header, no `file:line`, questions scattered, DDL reconstructed |
 | 4 | 7a5898b | skill (plugin, Sonnet 5.5) | 18/18 (3 runs; 18/18 at a7926d9) | fresh foreground reviewers, no timers 3/3; unscored: pre-existing blocking items left out of the gate's list, edits after a SUFFICIENT ruling not sent back |
-| 5 | 34a7495 | skill (plugin, Sonnet 5.5) | 13/15 (3 runs; 10/10 at e8db71d, 2 runs) | read plan row first, `not yet imported` areas, no seed read 3/3; one run grepped route decorators; one import gate wrote a step count and never asked for approval as they stand (printed gate parts — fixed in e9a135d, not rerun) |
+| 5 | e9a135d | skill (plugin, Sonnet 5.5) | 12/15 (3 runs; 13/15 at 34a7495, 10/10 at e8db71d) | import gate, consistency pass and `code` deciders 3/3; misses in the light-pass rules: one run read a route module, two did not mark each area with a pointer |
 | 6 | 9bdae75 | skill (plugin) | 6/6 (1 run, checks 1–6; 7 and 8 added after it) | 291 tests re-run green from a fresh clone; every blocking fix re-verified until SUFFICIENT; review result in each slice commit; render offered; missed: approved decisions (W1, an API error code, SD10) rewritten in place during slices and re-approved under the waiver instead of an open item, requirements.md left uncommitted on the branch |
 | 2 | 88f14b2 | skill (plugin, Sonnet 4.6) | 23/27 (3 runs) | one chunk and three modes 3/3; the stack constraint answered "none" (2/3); review findings queued in the gate instead of open items (2/3) |
 
