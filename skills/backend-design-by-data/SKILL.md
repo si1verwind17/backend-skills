@@ -28,7 +28,9 @@ Every document opens with the shared header and uses the shared ids
 this skill's folder: [../building-backend-services/documents.md](../building-backend-services/documents.md) — to find it, take the folder this SKILL.md is in, go up one level, then into `building-backend-services/`, not relative to your working directory); every open
 question and every assumption about the business or the environment is a
 row in `open-items.md`, never a section here; a choice the requirements
-leave to design is a decision row marked `agent`.
+leave to design is a decision row marked `agent` — except an id's scope
+(per-parent or global numbering), which is what the id means to the
+business: an open item, even when the wording seems to settle it.
 
 The header and the open-items format, in short:
 
