@@ -159,8 +159,8 @@ repair, however small: a one-line fix to a finding ruled INSUFFICIENT goes
 back to the reviewer before the header says REVIEWED.
 
 **Gate presentation is glanceable, then you stop.** One short message
-(phase 0's first gate and an auto mode's stop take the shapes in
-run-modes.md, which `check_docs.py --gate` prints): which phase completed, where the deliverable lives, the review findings
+(the start sitting and an auto mode's stop take run-modes.md's
+shapes, which `check_docs.py --gate` prints): which phase completed, where the deliverable lives, your consistency-pass findings, the review findings
 with their dispositions, the changes since each approved document's last
 approval in two groups — awaiting approval, then the ones that need none
 (documents.md) — and the open items awaiting the user as one-liners

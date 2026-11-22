@@ -70,7 +70,7 @@ belong to the document that cites them and share its status.
 data decisions. `architecture-design.md`: `I` interactions, `EV` events,
 `AD` architecture decisions. `stack-selection.md`: `SD` stack decisions (pins
 are listed without ids). `open-items.md`: `OI`. A decision is one row: the
-decision, who made it (`user`, with the ruling's date, or `agent`), why
+decision, who made it (`user`, with the ruling's date; `agent`; or `code`, for what an import records), why
 (one line), the alternative it beat (one line), and the ids it serves. A
 ruling's row carries the ruling as the user worded it, `user, <name>,
 <date>`, and `<name>'s ruling` as its why — never a reason the user did

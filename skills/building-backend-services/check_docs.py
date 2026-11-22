@@ -224,14 +224,20 @@ def print_shape(docs, step_docs, approved):
               "'awaiting approval' (or 'parked (OI-n)'), commit, then present the stop's sitting "
               "(run-modes.md) in this shape, as your final message, with no background wait left running:")
         print(template("## The stop's sitting"))
-    elif not approved and not any(head_line(p, "Form:").strip() == "Form: built" for p in step_docs):
+    elif not approved and any(head_line(p, "Form:").strip() == "Form: built" for p in step_docs):
+        print("This is the import's gate (changes-and-import.md): your consistency-pass findings as "
+              "a list, first; the review findings with dispositions; the open items (blocking first); "
+              "ask the user to approve the documents as they stand, named 'import' — no step count; "
+              "say that changes enter through triage afterwards; ask the run mode later changes use; "
+              "then the render question, last; as your final message, with no background wait left running.")
+    elif not approved:
         print("No document is approved yet: this gate is the start sitting (run-modes.md). "
               "Present it in this shape, every part included, as your final message, with no "
               "background wait left running:")
         print(template("## The start sitting"))
     else:
-        print("Present the gate as SKILL.md's 'Gate presentation is glanceable' says: the review "
-              "findings with dispositions, the changes since each approval in two groups, the open "
+        print("Present the gate as SKILL.md's 'Gate presentation is glanceable' says: your "
+              "consistency-pass findings as a list, first; the review findings with dispositions; the changes since each approval in two groups, the open "
               "items (blocking first), the run mode while the user has not chosen one (a plan.md "
               "you created reads gated), the next-step line, then the render question, last; as "
               "your final message, with no background wait left running.")

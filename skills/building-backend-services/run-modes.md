@@ -51,8 +51,9 @@ The gate of the run's first phase 0, after its review, is one message:
   recommendation, never "decide later" or "none": an auto run never decides
   these alone, because overruling one after the run is a rewrite. For the
   stack, recommend the constraint — one language or platform, never a
-  choice between two, from the team and the estate; phase 3 still selects
-  the full stack within it;
+  choice between two, from the team and the estate the requirements or
+  `context.md` record (a greenfield project has none to ask about); phase 3
+  still selects the full stack within it;
 - the run modes that differ for this project — all four when split by
   feature; otherwise always these three: gated, auto until design done,
   auto until done (for one chunk, auto until feature done is auto until
