@@ -1,185 +1,157 @@
-import base64
-import json
-from collections.abc import Iterator
+"""UC2-UC5 through HTTP, the real repositories and a real Postgres."""
 
-import psycopg
+from collections.abc import Callable, Iterator
+from datetime import timedelta
+
 import pytest
 from fastapi.testclient import TestClient
 
-from testkit.seed import reset_and_seed
-from testkit.test_app import build_test_app
+from parking_reservation.api.app import create_app
+from parking_reservation.repo.database import Pool
+from parking_reservation.repo.garage_repo import GarageRepo
+from parking_reservation.repo.reservation_repo import ReservationRepo
+from tests.stubbed.wiring import build_services
+from tests.support import NOW, SETTINGS, FakeClock, FakeVerifier
 
-pytestmark = pytest.mark.integration
-
-HEADER = "x-claims"
-
-
-def _identity(sub: str, role: str | None = None) -> dict[str, str]:
-    claims = {"sub": sub, **({"role": role} if role else {})}
-    return {HEADER: base64.urlsafe_b64encode(json.dumps(claims).encode()).decode().rstrip("=")}
+HOUR = timedelta(hours=1)
 
 
 @pytest.fixture
-def client(seeded: str) -> Iterator[TestClient]:
-    with TestClient(build_test_app(seeded)) as c:
-        yield c
+def clock() -> FakeClock:
+    return FakeClock()
 
 
-def _book(
-    client: TestClient, driver: str = "d1", garage: str = "G1", start: str = "2099-10-20T10:00:00Z"
-) -> dict:
-    end = start.replace("T10", "T12")
-    response = client.post(
-        "/v1/reservations",
-        json={"garage_code": garage, "start_at": start, "end_at": end},
-        headers={**_identity(driver), "Idempotency-Key": f"key-{driver}-{garage}-{start}"},
-    )
+@pytest.fixture
+def client(pool: Pool, clock: FakeClock) -> Iterator[TestClient]:
+    repo = ReservationRepo(pool)
+    app = create_app(SETTINGS, build_services(repo, GarageRepo(pool), clock), FakeVerifier())
+    yield TestClient(app, raise_server_exceptions=False)
+
+
+def as_(role: str, actor: str, key: str | None = None) -> dict[str, str]:
+    base = {"Authorization": "Bearer fe-token", "X-Actor-Id": actor, "X-Actor-Role": role}
+    return base | ({"Idempotency-Key": key} if key else {})
+
+
+def reserve(client: TestClient, garage: int, driver: str = "d1", start=HOUR, end=2 * HOUR) -> str:  # type: ignore[no-untyped-def]
+    body = {
+        "garage_id": garage,
+        "window_start": (NOW + start).isoformat(),
+        "window_end": (NOW + end).isoformat(),
+    }
+    response = client.post("/v1/reservations", json=body, headers=as_("driver", driver, "k"))
     assert response.status_code == 201, response.text
-    return response.json()
+    return str(response.json()["reservation_id"])
 
 
-def _act(client: TestClient, rid: str, action: str, driver: str = "d1"):
-    return client.post(f"/v1/reservations/{rid}/{action}", headers=_identity(driver))
+def act(client: TestClient, rid: str, action: str, driver: str = "d1"):  # type: ignore[no-untyped-def]
+    return client.post(f"/v1/reservations/{rid}/{action}", headers=as_("driver", driver))
 
 
-def test_book_check_in_check_out_and_billing_event(client, seeded) -> None:
-    rid = _book(client)["reservation_id"]
-    assert _act(client, rid, "check-in").json()["status"] == "checked_in"
-    again = _act(client, rid, "check-in")
-    assert again.status_code == 200 and again.json()["status"] == "checked_in"
-    done = _act(client, rid, "check-out")
-    assert done.status_code == 200 and done.json()["status"] == "completed"
+def test_reserve_check_in_check_out(
+    client: TestClient, clock: FakeClock, seed_garage: Callable[..., int]
+) -> None:
+    rid = reserve(client, seed_garage(1))
+    clock.advance(HOUR + timedelta(minutes=5))
+    checked_in = act(client, rid, "check-in")
+    assert checked_in.status_code == 200 and checked_in.json()["status"] == "CHECKED_IN"
+    again = act(client, rid, "check-in")
+    assert again.status_code == 200 and again.json() == checked_in.json()
+    clock.advance(timedelta(minutes=20))
+    done = act(client, rid, "check-out")
+    assert done.status_code == 200 and done.json()["status"] == "COMPLETED"
     assert done.json()["checked_out_at"] is not None
-    assert _act(client, rid, "check-out").json() == done.json()
-    with psycopg.connect(seeded) as conn:
-        completed = conn.execute(
-            "SELECT payload FROM outbox_event WHERE topic = 'parking-reservation-completed-v1'"
-        ).fetchall()
-    assert len(completed) == 1
-    assert completed[0][0]["reservation_public_id"] == rid
+    assert act(client, rid, "check-out").json() == done.json()
 
 
-@pytest.mark.parametrize(
-    ("setup", "action"),
-    [
-        ([], "check-out"),
-        (["check-in"], "cancel"),
-        (["cancel"], "check-in"),
-        (["cancel"], "check-out"),
-        (["check-in", "check-out"], "cancel"),
-        (["check-in", "check-out"], "check-in"),
-    ],
-)
-def test_forbidden_transitions_are_409(client, setup, action) -> None:
-    rid = _book(client)["reservation_id"]
-    for step in setup:
-        assert _act(client, rid, step).status_code == 200
-    response = _act(client, rid, action)
-    assert response.status_code == 409 and response.json()["code"] == "INVALID_TRANSITION"
+def test_check_in_is_refused_outside_the_window(
+    client: TestClient, seed_garage: Callable[..., int]
+) -> None:
+    rid = reserve(client, seed_garage(1))
+    early = act(client, rid, "check-in")
+    assert early.status_code == 409 and early.json()["code"] == "OUTSIDE_WINDOW"
 
 
-def test_cancel_then_repeat_and_rebook(client) -> None:
-    rid = _book(client, garage="G2")["reservation_id"]
-    assert _act(client, rid, "cancel").json()["status"] == "cancelled"
-    assert _act(client, rid, "cancel").status_code == 200
-    assert _book(client, driver="d2", garage="G2")["spot_label"] == "B1"
+def test_check_out_needs_a_check_in_first(
+    client: TestClient, seed_garage: Callable[..., int]
+) -> None:
+    rid = reserve(client, seed_garage(1))
+    refused = act(client, rid, "check-out")
+    assert refused.status_code == 409 and refused.json()["code"] == "ILLEGAL_TRANSITION"
 
 
-def test_check_in_after_the_window_is_409_closed(client, seeded) -> None:
-    rid = _book(client, start="2099-10-20T10:00:00Z")["reservation_id"]
-    with psycopg.connect(seeded, autocommit=True) as conn:
-        conn.execute(
-            "UPDATE reservation SET start_at = '2020-01-01T10:00Z', end_at = '2020-01-01T12:00Z' "
-            "WHERE public_id = %s",
-            (rid,),
-        )
-    response = _act(client, rid, "check-in")
-    assert response.status_code == 409 and response.json()["code"] == "CHECKIN_WINDOW_CLOSED"
+def test_cancel_before_check_in_frees_the_spot(
+    client: TestClient, seed_garage: Callable[..., int]
+) -> None:
+    garage = seed_garage(1)
+    rid = reserve(client, garage)
+    cancelled = act(client, rid, "cancel")
+    assert cancelled.status_code == 200 and cancelled.json()["status"] == "CANCELLED"
+    assert act(client, rid, "cancel").json() == cancelled.json()
+    body = {
+        "garage_id": garage,
+        "window_start": (NOW + HOUR).isoformat(),
+        "window_end": (NOW + 2 * HOUR).isoformat(),
+    }
+    other = client.post("/v1/reservations", json=body, headers=as_("driver", "d2", "k2"))
+    assert other.status_code == 201
 
 
-def test_other_drivers_and_unknown_ids_are_404(client) -> None:
-    rid = _book(client)["reservation_id"]
-    for response in (
-        _act(client, rid, "cancel", driver="intruder"),
-        client.get(f"/v1/reservations/{rid}", headers=_identity("intruder")),
-        _act(client, "00000000-0000-0000-0000-000000000000", "check-in"),
-    ):
-        assert response.status_code == 404 and response.json()["code"] == "RESERVATION_NOT_FOUND"
-    assert client.get(f"/v1/reservations/{rid}", headers=_identity("d1")).json()["reservation_id"] == rid
+def test_cancel_after_check_in_is_refused(
+    client: TestClient, clock: FakeClock, seed_garage: Callable[..., int]
+) -> None:
+    rid = reserve(client, seed_garage(1))
+    clock.advance(HOUR)
+    act(client, rid, "check-in")
+    refused = act(client, rid, "cancel")
+    assert refused.status_code == 409 and refused.json()["code"] == "ILLEGAL_TRANSITION"
 
 
-def test_a_malformed_id_is_422(client) -> None:
-    response = client.get("/v1/reservations/not-a-uuid", headers=_identity("d1"))
-    assert response.status_code == 422 and response.json()["code"] == "INVALID_REQUEST"
+def test_a_cancelled_reservation_cannot_be_checked_in(
+    client: TestClient, clock: FakeClock, seed_garage: Callable[..., int]
+) -> None:
+    rid = reserve(client, seed_garage(1))
+    act(client, rid, "cancel")
+    clock.advance(HOUR)
+    refused = act(client, rid, "check-in")
+    assert refused.status_code == 409 and refused.json()["code"] == "ILLEGAL_TRANSITION"
 
 
-def test_transitions_require_identity(client) -> None:
-    rid = _book(client)["reservation_id"]
-    assert client.post(f"/v1/reservations/{rid}/cancel").status_code == 401
-    assert client.get(f"/v1/reservations/{rid}").status_code == 401
+def test_another_driver_gets_not_found_and_changes_nothing(
+    client: TestClient, seed_garage: Callable[..., int]
+) -> None:
+    rid = reserve(client, seed_garage(1))
+    for action in ("check-in", "check-out", "cancel"):
+        refused = act(client, rid, action, driver="intruder")
+        assert refused.status_code == 404 and refused.json()["code"] == "NOT_FOUND"
+    mine = client.get(f"/v1/reservations/{rid}", headers=as_("driver", "d1"))
+    assert mine.json()["status"] == "BOOKED"
 
 
-def test_staff_day_lookup_by_garage_and_garage_local_date(client, seeded) -> None:
-    reset_and_seed(seeded, {"Z1": ("Europe/Zurich", ["S1", "S2"])})
-    # 2026-10-20 in Zurich (CEST) is 2026-10-19T22:00Z .. 2026-10-20T22:00Z
-    inside = _book(client, garage="Z1", start="2099-10-20T10:00:00Z")
-    _book(client, driver="d2", garage="Z1", start="2099-10-21T10:00:00Z")
-    staff = _identity("s1", "staff")
-    response = client.get("/v1/garages/Z1/reservations?date=2099-10-20", headers=staff)
-    assert response.status_code == 200
-    assert [r["reservation_id"] for r in response.json()] == [inside["reservation_id"]]
-    assert response.json()[0]["driver_id"] == "d1"
-    cancelled = _act(client, inside["reservation_id"], "cancel")
-    assert cancelled.status_code == 200
-    day = client.get("/v1/garages/Z1/reservations?date=2099-10-20", headers=staff).json()
-    assert [r["status"] for r in day] == ["cancelled"]
-    assert client.get("/v1/garages/Z1/reservations?date=2099-10-25", headers=staff).json() == []
-
-
-def test_staff_lookup_errors(client) -> None:
-    staff = _identity("s1", "staff")
-    assert (
-        client.get("/v1/garages/NOPE/reservations?date=2099-10-20", headers=staff).json()["code"]
-        == "GARAGE_NOT_FOUND"
+def test_staff_see_the_garages_day(client: TestClient, seed_garage: Callable[..., int]) -> None:
+    garage = seed_garage(2)
+    first = reserve(client, garage, "d1")
+    act(client, first, "cancel")
+    reserve(client, garage, "d2")
+    listed = client.get(
+        f"/v1/garages/{garage}/reservations?date=2026-03-01", headers=as_("staff", "s1")
     )
-    assert (
-        client.get("/v1/garages/G1/reservations?date=garbage", headers=staff).json()["code"]
-        == "INVALID_REQUEST"
+    assert listed.status_code == 200
+    data = listed.json()
+    assert data["garage_id"] == garage and data["date"] == "2026-03-01"
+    assert sorted(r["status"] for r in data["reservations"]) == ["BOOKED", "CANCELLED"]
+    assert sorted(r["driver_id"] for r in data["reservations"]) == ["d1", "d2"]
+
+
+def test_the_lookup_reports_an_unknown_garage(client: TestClient) -> None:
+    missing = client.get("/v1/garages/9/reservations?date=2026-03-01", headers=as_("staff", "s1"))
+    assert missing.status_code == 404 and missing.json()["code"] == "GARAGE_NOT_FOUND"
+
+
+def test_the_day_before_is_empty(client: TestClient, seed_garage: Callable[..., int]) -> None:
+    garage = seed_garage(1)
+    reserve(client, garage)
+    other_day = client.get(
+        f"/v1/garages/{garage}/reservations?date=2026-02-28", headers=as_("staff", "s1")
     )
-    assert client.get("/v1/garages/G1/reservations", headers=staff).status_code == 422
-    driver = client.get("/v1/garages/G1/reservations?date=2099-10-20", headers=_identity("d1"))
-    assert driver.status_code == 403 and driver.json()["code"] == "FORBIDDEN"
-    assert client.get("/v1/garages/G1/reservations?date=2099-10-20").status_code == 401
-
-
-@pytest.mark.parametrize("day", ["9999-12-31", "0001-01-01", "1800-01-01"])
-def test_dates_at_the_edge_of_the_calendar_are_422_not_500(client, day) -> None:
-    response = client.get(f"/v1/garages/G1/reservations?date={day}", headers=_identity("s1", "staff"))
-    assert response.status_code == 422 and response.json()["code"] == "INVALID_REQUEST"
-
-
-def test_overlong_garage_codes_are_422(client) -> None:
-    response = client.get(
-        f"/v1/garages/{'G' * 65}/reservations?date=2099-10-20", headers=_identity("s1", "staff")
-    )
-    assert response.status_code == 422
-
-
-def test_staff_cannot_act_as_drivers(client) -> None:
-    response = client.post(
-        "/v1/reservations",
-        json={"garage_code": "G1", "start_at": "2099-10-20T10:00:00Z", "end_at": "2099-10-20T12:00:00Z"},
-        headers={**_identity("s1", "staff"), "Idempotency-Key": "k"},
-    )
-    assert response.status_code == 403 and response.json()["code"] == "FORBIDDEN"
-
-
-def test_failed_requests_still_log_the_reservation_id(client, caplog) -> None:
-    import logging
-
-    rid = _book(client)["reservation_id"]
-    with caplog.at_level(logging.INFO, logger="parking_reservation.request"):
-        response = _act(client, rid, "check-out")  # still reserved: 409
-    assert response.status_code == 409
-    fields = [r.__dict__["fields"] for r in caplog.records if r.name == "parking_reservation.request"]
-    assert fields[-1]["reservation_id"] == rid and fields[-1]["error_code"] == "INVALID_TRANSITION"
+    assert other_day.status_code == 200 and other_day.json()["reservations"] == []

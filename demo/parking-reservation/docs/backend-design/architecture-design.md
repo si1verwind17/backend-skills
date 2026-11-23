@@ -1,135 +1,135 @@
-# Architecture design: parking-reservation
-Status: APPROVED · 2026-10-17 · approved by user (review gates waived for this run)
+# Architecture: parking-reservation
+Status: REVIEWED · 2026-11-23
 Form: built
-Builds on: requirements.md (UC1–UC6, R9, NF1–NF6, LD1–LD3), data-design.md (W1–W5, DD2, DD4, DD5, DD6, DD9, A1–A7)
+Builds on: requirements.md (LD1–LD4, UC1–UC7, R1, R13–R18, R21, NF1–NF4), data-design.md (E4, W1–W5, DD5, DD8, DD12)
 
-One stateless Python service on Cloud Run holds the whole API and the outbox relay. Postgres arbitrates every concurrent write. Lifecycle events leave through a transactional outbox; a relay that Cloud Scheduler starts every minute and that polls for 55 seconds publishes them, so billing hears of every completion at least once, with a dedup id.
+One stateless service on Cloud Run owns all reservation data in its Postgres database. Clients reach it through an authenticating front end over REST. Every state change leaves an event in the service's own outbox table; a scheduled sweep publishes the events to a topic per transition, and billing consumes the completion topic.
 
 ## Components
-
 ```mermaid
 flowchart LR
-    App[Mobile app] -->|HTTPS REST| GW[API gateway<br/>authenticates]
-    Staff[Staff tool] -->|HTTPS REST| GW
-    GW -->|HTTPS REST<br/>identity headers| SVC[parking-reservation<br/>Cloud Run]
-    SVC -->|SQL pool| DB[(Postgres)]
-    SCH[Cloud Scheduler<br/>every minute] -->|POST relay<br/>OIDC| SVC
-    HC[Cloud Run health check] -->|GET healthz| SVC
-    SVC -->|publish| PS[[Pub/Sub topics<br/>4 lifecycle topics]]
-    PS -->|completed topic| BILL[Billing system]
+    App[Driver mobile app] -->|I1 REST| GW
+    Staff[Staff tool] -->|I2 REST| GW
+    GW[Authenticating front end<br/>verifies caller, sets actor headers] -->|REST with invoker identity| Svc
+    Sched[Cloud Scheduler] -->|I5 relay sweep with OIDC token| Svc
+    Svc[parking-reservation<br/>Cloud Run, stateless] -->|I3 SQL| DB[(Postgres<br/>reservations + outbox)]
+    Svc -->|I4 publish| Topics[[Pub/Sub topics<br/>reservation-*-v1]]
+    Topics -->|I6 subscription| Billing[Billing system]
 ```
 
+## Key flows
 ```mermaid
 sequenceDiagram
-    participant App
-    participant Svc as parking-reservation
-    participant DB as Postgres
-    App->>Svc: POST reservations with Idempotency-Key
-    Svc->>Svc: validate time-independent window rules (R6, R14)
-    Svc->>DB: look up (driver, key)
-    DB-->>Svc: stored reservation or none
-    Svc->>Svc: if stored then replay 200 or key reused 409, else validate start skew (R15)
-    Svc->>DB: reserve_spot (one call, READ COMMITTED)
-    DB-->>Svc: created / replayed / no_spot / key_reused / garage_not_found
-    Svc-->>App: 201 / 200 / 409 / 409 / 404
-```
-
-```mermaid
-sequenceDiagram
-    participant App
-    participant Svc as parking-reservation
-    participant DB as Postgres
-    participant Sch as Cloud Scheduler
-    participant PS as Pub/Sub
-    participant Bill as Billing
-    App->>Svc: POST check-out
-    Svc->>DB: read reservation then transition_reservation (checked_in to completed + outbox row)
-    DB-->>Svc: applied
-    Svc-->>App: 200 completed
-    Sch->>Svc: POST relay (every minute)
-    loop until 55 s elapsed
-        Svc->>DB: read pending batch (no row locks held)
-        Svc->>PS: publish batch concurrently (event_id)
-        PS-->>Svc: acks and failures
-        Svc->>DB: mark published or count failures
+    participant A as App
+    participant S as Service
+    participant D as Postgres
+    A->>S: POST /v1/reservations with Idempotency-Key
+    S->>D: read by key
+    alt key found
+        S-->>A: 201 same reservation, or IDEMPOTENCY_KEY_REUSED
+    else key unknown
+        S->>D: advisory lock on garage
+        S->>D: booking CTE inserts reservation and outbox row
+        alt row returned
+            S-->>A: 201 BOOKED
+        else zero rows
+            S->>D: read by key again, then read garage
+            S-->>A: replay, GARAGE_NOT_FOUND or GARAGE_FULL
+        end
     end
-    Svc-->>Sch: 200 when the loop ends
-    PS->>Bill: deliver (at least once)
+```
+```mermaid
+sequenceDiagram
+    participant T as Staff tool
+    participant S as Service
+    participant D as Postgres
+    T->>S: GET /v1/garages/id/reservations?date=2026-03-29
+    S->>D: one query joins the garage and filters reservations overlapping the garage-local day
+    D-->>S: rows, or no garage
+    S-->>T: 200 list, or GARAGE_NOT_FOUND
+```
+```mermaid
+sequenceDiagram
+    participant A as App
+    participant S as Service
+    participant D as Postgres
+    participant T as Scheduler
+    participant P as Pub/Sub
+    participant B as Billing
+    A->>S: POST check-out
+    S->>D: guarded update plus completed outbox row
+    S-->>A: 200 COMPLETED
+    T->>S: POST /internal/outbox/relay
+    loop each due row, one short transaction
+        S->>D: claim one pending row
+        S->>P: publish and await the result
+        alt accepted
+            S->>D: mark published and commit
+        else transient failure
+            S->>D: raise attempts, push next_attempt_at out, commit
+        else invalid or oversize event
+            S->>D: mark parked, log error, commit
+        end
+    end
+    P-->>B: deliver at least once
 ```
 
 ## Decisions
+| Id | Decision | By | Why | Beat | Serves |
+|---|---|---|---|---|---|
+| AD1 | One service, `parking-reservation`, owning its database | agent | one team, one capability, POC-sized volume (NF2); a split adds hops without a boundary to defend | separate reservation and billing-feed services | LD1, NF2 |
+| AD2 | Stateless; no in-process mutable state; Postgres is the only state (a time-bounded cache of Google's public signing keys is derived read-only data, not service state) | agent | scale-out on Cloud Run; serialization lives in the database (DD5) | per-reservation actor | R1, LD2 |
+| AD3 | No cache of business data (AD2 notes the one derived exception) | agent | reads are indexed lookups at NF2 volume; staleness could show a taken spot | cached day lists | NF3 |
+| AD4 | Cloud Run with request-based CPU, minimum instances 0 (assumed — OI-15), maximum 10, request concurrency 10, pool of 5 connections per instance, a 5 s wait for a pooled connection, 5 s lock and statement timeouts | agent | scale-to-zero assumed acceptable; the cap, the pool and the timeouts bound database load, and a request waiting on DD5's lock holds one pooled connection; Cloud SQL needs `max_connections` of at least 120 to cover two revisions of 50 connections during a rollout plus the loader, migrations and reserved connections; the first request after idle or a scale-out pays a cold start, so it may exceed NF3, and the minute sweep keeps an instance warm in practice, not by guarantee | minimum 1 instance (always-on cost) | LD2, NF3 |
+| AD5 | REST with JSON for every client call; no gRPC | agent | front-facing mobile clients | gRPC | LD4 |
+| AD6 | Callers reach the service only through an authenticating front end that verifies the driver's or staff member's credential, removes any client-supplied `X-Actor-Id` and `X-Actor-Role`, sets them from the verified identity, and sends its own Google ID token in `Authorization`; Cloud Run requires IAM authentication with invoker granted on this service only to the front end's and the scheduler's service accounts; the service itself verifies the ID token of every call (audience, issuer, expiry), accepts `/v1/*` only from the front end's account and `/internal/*` only from the scheduler's, and rejects every other path, with one exception: `GET /health` is answered without a token and without a caller check, because Cloud Run's own probe reaches the container with no token and the endpoint returns no data; for `/v1/*` it then checks role and ownership (R13, R17, R21) from the headers (assumed — OI-6) | agent | the headers are trusted because the service verifies who sent them, not because of network position; this also closes the project-Editor and scheduler paths to `/v1/*`; preconditions: the service runs as its own dedicated service account, no invoker grant at project level, impersonation of the two accounts is restricted to operators | trusting headers on IAM alone | R13, R17, R21 |
+| AD7 | Events are published by a sweep: Cloud Scheduler calls `POST /internal/outbox/relay` every minute (assumed — OI-19); the service verifies the call's ID token as AD6 states; no publish in the request path; the sweep takes at most 50 due rows, publishes each with a 10 s timeout, stops claiming new rows once one row's worst case of 25 s would pass 45 s, holds one pooled connection at a time, and backs a failing row off by `min(30 s × 2^attempts, 15 min)`, alerting at 10 attempts | agent | a request never depends on the broker; Cloud Run allocates CPU only during requests, so work after a response is not reliable; the bounds keep a sweep inside one tick | publish inline after commit | R14, UC6 |
+| AD8 | One topic per transition: `reservation-reserved-v1`, `reservation-checked-in-v1`, `reservation-completed-v1`, `reservation-cancelled-v1`; JSON payloads; a breaking change means a `-v2` topic | agent | every transition is published by default (DD12); billing subscribes only to completed | one topic with a type field | UC6, R14 |
+| AD9 | Pub/Sub as the broker, delivery at least once, consumers deduplicate on `event_id` (assumed — OI-1); billing's subscription on `reservation-completed-v1` must exist before the first completion is published, and the subscription's retention bounds how long billing may be down (default 7 days) | agent | GCP-native for Cloud Run; the outbox already makes duplicates possible; Pub/Sub keeps a message only for subscriptions that exist at publish time | self-run broker | UC6 AC1, UC6 AC2 |
+| AD10 | A published or parked row can be re-driven: an operator sets its outbox row back to `pending` with `published_at` cleared, `attempts` reset to 0 and `next_attempt_at` now, and the next sweep publishes it again | agent | a loss behind the broker (subscription missing, retention exceeded) needs a recovery path; consumers deduplicate on `event_id` | no recovery path | NF1, UC6 AC2 |
 
-| Id | Decision | Why | Beat | Serves |
-|---|---|---|---|---|
-| AD1 | One service holds the API and the relay (service split: OI-19) | Team of 4, one database, one deploy unit; relay shares the outbox code | Separate relay service: a second deployable for 30 lines of loop | LD1, DD5 |
-| AD2 | Stateless: no in-process mutable state; all state in Postgres | Scale horizontally, scale on Cloud Run; races arbitrated by data design guards | In-memory spot cache: stale, wrong with several instances | R1, DD2 |
-| AD3 | No cache | Hottest read is the staff lookup, low frequency; garage lookup is by indexed code inside the call | Cache garages: no measured need | NF2, A6 |
-| AD4 | Cloud Run, min-instances 1, max-instances 10 and request concurrency 20 per instance, sized so peak instances (up to twice the maximum) × pool size stays under 60 % of the database connection limit (proposed — OI-20) | Avoid cold starts on the user-facing path for 99.9 % (NF4), protect Postgres connections | Scale to zero: cold-start latency on the first call of the day | NF3, NF4, LD1 |
-| AD5 | REST + JSON, versioned path `/v1`; no gRPC | Front-facing mobile traffic | gRPC: needs a proxy for browsers, no benefit here | LD2 |
-| AD6 | Authentication is done upstream by an API gateway (AD13). Cloud Run requires IAM authentication and only the gateway's and the scheduler's service accounts hold the invoker role. The service reads the caller's identity only from the gateway's verified-claims header (configured header name, JSON claims, `sub` = driver id, a `role` claim = `staff` for staff — claim names OI-5) and never from client-controllable headers such as `X-Driver-Id`. `/internal/relay` verifies in the service that the caller's ID token has the scheduler account's email and this service's audience. Every driver operation filters by the caller's driver id, and an identity with the staff role is refused on driver operations (OI-21) | The verified-claims header is set by the gateway from the validated token, so a client cannot choose its identity. Google API Gateway forwards other client headers unchanged, so a service that trusted `X-Driver-Id` would be forgeable | Verify end-user tokens in-service: needs an issuer and keys nobody gave us | R12, OI-5 |
-| AD7 | Events are published by an outbox relay: Cloud Scheduler calls `POST /internal/relay` every minute and the handler runs a publish loop for 55 s, doing all work before it responds | Cloud Run throttles CPU outside requests, so work must live inside the request. Polling inside the 55 s loop makes the delay a few seconds, which meets the 1-minute NF6; the minute re-start is the repair for a crashed run | Stop when empty: worst case over a minute by construction. Inline publish after commit: crash or throttle loses the event | R9, NF1, NF6, DD5 |
-| AD8 | Relay iteration: read up to 50 pending events (fewest attempts first, then oldest) without holding row locks, skipping rows that already failed during this run, publish them concurrently with a 10 s deadline each, then in one short transaction mark acknowledged rows `published` and, for failed rows, record the error and add one attempt, both updates guarded on `status = 'pending'`. A row is retried at most once per run, so one attempt is at least a minute apart from the next (runs start each minute) and a row parks after 60 failed runs (proposed — OI-18). When no row is eligible the loop sleeps 2 s. Two overlapping runs may publish the same event twice, which at-least-once delivery and the `event_id` dedup absorb | No transaction spans network calls, a short broker outage cannot exhaust the attempts, a failing row costs one overlapped deadline, and the guard stops a late failure from touching a row another run already published | Row locks held across publishes: the transaction would outlive the cap and roll back attempt counts. Counting an attempt per iteration: a brief outage parks everything | NF6, DD5 |
-| AD9 | At-least-once delivery, dedup by `event_id` on the consumer (OI-8); no ordering guarantee across events | Matches NF1 and billing only needs `completed` | Exactly-once: not offered by the broker end to end | R9, NF1 |
-| AD10 | Domain validation and state-machine rules live in the service's domain layer, the database holds the guards | Pure, unit-testable rules | Rules in SQL functions only | UC1–UC5 |
-| AD11 | Staff may read any garage's reservations (staff scoping: OI-21) | No role model was given | Per-garage staff grants: unspecified | R13, UC2 |
-| AD12 | Pub/Sub, one topic per lifecycle event. The billing team owns and creates the subscription on the completed topic, with no expiry, before go-live, and with a dead-letter topic and an alert. Every topic retains messages for 7 days (proposed — OI-8) | Cloud Run is on GCP; a subscription only receives messages published after it exists, and an unconsumed topic simply drops them, so the subscription is a go-live precondition and retention allows a replay seek | Direct HTTP call to billing: couples request-time availability to billing | R9, NF1, OI-8, OI-9 |
-| AD13 | API gateway product: Google Cloud API Gateway or the organization's existing gateway (OI-5), forwarding the verified token claims in a header (for Google API Gateway `X-Apigateway-Api-Userinfo`) | The service must not hold token-verification keys | Verify tokens in-service | OI-5, R12 |
+UC6 AC2 ("a billing outage loses nothing") therefore holds while billing's outage is shorter than its subscription's retention, and beyond that through AD10.
 
 ## Interactions
-
-| Id | Interaction | Sync / async, protocol | Failure path |
+| Id | From → to | Style, protocol | Failure path |
 |---|---|---|---|
-| I0 | App or staff tool → gateway → service | Sync, REST via the gateway | Gateway rejects unauthenticated calls with 401 before the service sees them. A gateway→service failure surfaces as 502/503 to the client, who retries; every endpoint is safe to retry (idempotent by key or by state) |
-| I1 | Mobile app → service (UC1, UC3–UC6) | Sync, REST | App retries; create is idempotent by key, transitions are idempotent by state. A database error mid-call returns `503` and the retry is safe |
-| I2 | Staff tool → service (UC2) | Sync, REST | Plain retry; read only |
-| I3 | Service → Postgres | Sync, SQL, pooled | No in-process retry loops; one bounded retry for SQLSTATE 23505/23P01 from `reserve_spot` (idempotent, W1); other database failures return `503 UNAVAILABLE` and the client retries |
-| I4 | Scheduler → relay endpoint | Scheduled HTTPS POST + OIDC, the handler works until done | A missed or failed call is repaired by the next minute's call. Alerts (proposed — OI-22): oldest pending event older than 5 minutes, and any event parked. A parked event is re-queued by an operator setting `status = 'pending'` and `attempts = 0` on its row once the cause is fixed |
-| I7 | Cloud Run → `/healthz` | Sync probe | Failing probe restarts the instance |
-| I5 | Relay → Pub/Sub | Sync publish, concurrent per batch, 10 s deadline each | Failure adds an attempt and records `last_error` on that row only (AD8), the next iteration retries it; after the allowed failed runs the row is `parked` and logged at error level (OI-18). A poison event costs one overlapped deadline and sorts behind fresh events, so it blocks no one |
-| I6 | Pub/Sub → billing | Async, broker redelivery | Billing's side: the broker redelivers until acked, billing dedups on `event_id`, a message that keeps failing goes to billing's dead-letter topic and alerts (AD12, OI-8). Delivery is unordered, so one failing message blocks no other |
+| I1 | app → front end → service | sync REST | the client repeats the same request: reserve is idempotent by key (R18), transitions answer from stored state (DD8); a technical failure returns 503 |
+| I2 | staff tool → front end → service | sync REST | read only, the client repeats |
+| I3 | service → Postgres | sync SQL over a pool | a failed statement is an error to the caller; one bounded retry of a transient connection error on read paths only, never around a write; the client repeats failed writes, which are idempotent |
+| I4 | service → Pub/Sub | async publish by the sweep, one short transaction per row, awaiting each publish result before marking the row | a transient failure leaves the row `pending` with `attempts` raised and `next_attempt_at` set out by AD7's backoff; a row at 10 attempts is logged as an error on every sweep for an operator; only an invalid or oversize event is parked, with an error log, and re-driven by AD10; topic- or permission-level errors are transient plus that alert; one row never blocks the rest |
+| I5 | Scheduler → service | sync HTTP call every minute | the next tick; overlapping sweeps claim different rows with `SKIP LOCKED`, and a crash between publish and mark can publish a row twice, which consumers absorb by `event_id` |
+| I6 | Pub/Sub → billing | async, at least once; push or pull is billing's choice | redelivery by the broker; billing owns its dead-letter handling |
+
+The worst-case delay of a completion notice is one tick plus the sweep's drain, about two minutes in normal operation (assumed — OI-20), and up to the 15-minute backoff cap after a broker outage ends.
 
 ## API inventory
-
-Routes are in `src/parking_reservation/api/*_router.py`, and the OpenAPI document is generated by the running service (`/openapi.json`). What the code cannot say: `POST /v1/reservations` requires header `Idempotency-Key` and answers 201 created or 200 replayed; `POST /internal/relay` runs the relay for 55 s and responds only when done (never return early and keep working: Cloud Run would throttle it), so the Cloud Run request timeout and the Scheduler attempt deadline must be at least 90 s (a run lasts at most about 75 s and overlaps the next one; worst case 55 s loop + 10 s publish deadline + 4 s pool waits + a 5 s certificate fetch, about 75 s). The run's request line carries `published`, `failed`, `parked` and `oldest_pending_age_seconds`, the gauge of the I4 alerts. Errors share one JSON body `{code, message}`; codes and statuses are `api/error_status.py` (`INVALID_REQUEST` and `INVALID_WINDOW` 422, `IDEMPOTENCY_KEY_REUSED`, `NO_SPOT_AVAILABLE`, `INVALID_TRANSITION`, `CHECKIN_WINDOW_CLOSED` 409, `GARAGE_NOT_FOUND`, `RESERVATION_NOT_FOUND` 404, `UNAUTHENTICATED` 401, `FORBIDDEN` 403, `UNAVAILABLE` 503, `INTERNAL_ERROR` 500 for a defect; unknown routes and methods answer `HTTP_<status>` in the same body). Any database error is a retryable 503, and a defect is logged once and answered as 500, both by the request boundary (`api/error_handlers.py`, `api/request_logging.py`).
+The routes built so far are in `src/parking_reservation/api/` (`*_routes.py`), and FastAPI generates the OpenAPI document from them (`app.openapi()`); `GET /health` is Cloud Run's probe. Errors are JSON `{code, message}` with the codes of `domain/errors.py`; status values on the wire are `BOOKED`, `CHECKED_IN`, `COMPLETED`, `CANCELLED`. The sweep endpoint `POST /internal/outbox/relay` is for Cloud Scheduler only (AD6, AD7). The staff lookup takes the date as the query parameter `date`, in `YYYY-MM-DD`.
 
 ## Event catalog
+All four events share one payload; fields not yet true at that transition are null.
 
-All four events share one payload built in the database by `reservation_event_payload` (DD6); the outbox row stores it as published. Topics follow `parking-reservation-<event>-v1`; breaking changes go to a `-v2` topic (OI-9, OI-8).
-
-| Id | Topic | Trigger (write path) | Consumers |
+| Id | Topic | Triggered by | Consumers |
 |---|---|---|---|
-| EV1 | `parking-reservation-reserved-v1` | W1 created | none yet |
-| EV2 | `parking-reservation-checked-in-v1` | W2 applied | none yet |
-| EV3 | `parking-reservation-completed-v1` | W3 applied | billing (OI-8) |
-| EV4 | `parking-reservation-cancelled-v1` | W4 applied | none yet |
-
-Payload fields and their source:
+| EV1 | `reservation-reserved-v1` | W1 | none yet |
+| EV2 | `reservation-checked-in-v1` | W2 | none yet |
+| EV3 | `reservation-completed-v1` | W3 | billing (R14) |
+| EV4 | `reservation-cancelled-v1` | W4 | none yet |
 
 | Field | Source |
 |---|---|
-| `event_id` | `outbox_event.event_id` (dedup id) |
-| `topic` | `outbox_event.topic` |
-| `occurred_at` | writer's clock at the transition (derived, same instant as `updated_at`) |
-| `reservation_public_id` | `reservation.public_id` |
-| `status` | `reservation.status` after the transition |
+| `event_id` | `outbox.event_id` |
+| `event_type` | `outbox.event_type` |
+| `occurred_at` | derived: the service clock's value at the transition, equal to `reservation.updated_at` after it |
+| `reservation_id` | `reservation.public_id` |
 | `driver_id` | `reservation.driver_id` |
-| `garage_code` | `garage.code` |
-| `spot_label` | `spot.label` |
-| `start_at`, `end_at` | `reservation.start_at`, `reservation.end_at` |
-| `checked_in_at`, `checked_out_at`, `cancelled_at` | same-named `reservation` columns (null when not reached) |
+| `garage_id` | `reservation.garage_id` |
+| `spot_id` | `reservation.spot_id` |
+| `window_start`, `window_end` | `reservation.window_start`, `reservation.window_end` |
+| `checked_in_at` | `reservation.checked_in_at` |
+| `checked_out_at` | `reservation.checked_out_at` |
+| `cancelled_at` | `reservation.cancelled_at` |
 
-All timestamps are ISO-8601 UTC strings (the database session time zone is pinned to UTC). PII note: `driver_id` is an opaque external identifier, no name, plate or payment data (NF5, OI-17). Billing prices the stay from the window and the check-in/out instants; no price field exists (pricing is out of scope, requirements §9).
-
-Example (EV3):
-
-```json
-{"event_id": "0193f2c4-7a10-7c2e-9b1d-3f6a2e8d5c01", "topic": "parking-reservation-completed-v1",
- "occurred_at": "2026-10-20T11:00:00Z", "reservation_public_id": "0193f2c1-0b3e-7f4a-8d52-1c9e6a7b4d20",
- "status": "completed", "driver_id": "drv_8842", "garage_code": "HBF-01", "spot_label": "A12",
- "start_at": "2026-10-20T10:00:00Z", "end_at": "2026-10-20T12:00:00Z",
- "checked_in_at": "2026-10-20T10:05:00Z", "checked_out_at": "2026-10-20T11:00:00Z", "cancelled_at": null}
-```
+PII note: `driver_id` is an opaque identifier, the only personal-data field (NF4, OI-13); no name, contact or plate is in any payload. A consumer subscribing later receives no history unless a subscription or topic retention exists; the outbox rows allow re-driving (AD10). Versioning: breaking changes publish to a `-v2` topic beside the old one.
 
 ## Scaling notes
-
-NF2 sizing (≤ 20 writes/s, about 1,200 events/min at peak, at most 3 per reservation) is a single Postgres instance and a handful of Cloud Run instances. Creates serialize per garage on a row lock (DD4), so contention exists only inside one garage. The relay publishes 50 events per iteration concurrently, so one iteration takes roughly one publish round trip (tens of milliseconds) and the loop handles thousands of events per minute. The relay request keeps one instance busy 55 s of every minute, so scale-to-zero never happens in practice and min-instances 1 costs nothing extra (AD4). Revisit min-instances and pool size with measured load (OI-20, OI-10).
+At NF2 volume one instance suffices. Per-garage serialization (DD5) queues requests for the same garage, each holding one of its instance's 5 connections; the 5 s lock timeout turns a long wait into a 503 the client repeats. Ten instances of 5 connections bound the service at 50 connections per revision. The sweep takes at most 50 rows per call; a backlog drains over successive ticks.

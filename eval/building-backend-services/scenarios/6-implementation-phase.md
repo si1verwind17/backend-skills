@@ -1,8 +1,9 @@
 # Scenario 6: implementation phase, graded on the demo run
 
 Graded on the full-chain run that produces `demo/parking-reservation/`
-(prompt in the demo's README: the parking ask, gates waived for the run,
-everything else the skill requires still applies), in a git repository that
+(prompt in the demo's README: the parking ask, run mode auto until done
+chosen before the start sitting, everything else the skill requires still
+applies), in a git repository that
 starts with one commit on `main`.
 
 **Checks** (PASS/FAIL):

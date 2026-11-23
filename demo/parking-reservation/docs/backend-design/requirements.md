@@ -1,132 +1,125 @@
 # Requirements: parking-reservation
-Status: APPROVED · 2026-10-17 · approved by user (review gates waived for this run)
+Status: REVIEWED · 2026-11-23
 Form: design
-Builds on: the business ask (quoted in LD sources below)
+Builds on: the business ask (start brief)
 
-Drivers reserve a spot at a garage for a time window from the mobile app. Garage staff look up a garage's reservations for a day on site. Drivers check in and out, may cancel before checking in, and a completed reservation must reach billing so the driver can be charged.
+Drivers reserve a parking spot at a garage for a time window from the mobile app; garage staff look up a day's reservations on site; drivers check in, check out or cancel; a completed reservation is reported to billing.
 
 ## 1. Summary & business goal
-
-A service that guarantees a spot is never double-booked, gives on-site staff a reliable daily view, and hands billing a trustworthy completion signal. Small team (4 engineers), Python, Cloud Run, Postgres.
+The business lets drivers book a garage spot ahead of arrival and wants no spot ever sold twice. Staff need an on-site day list per garage. Billing charges the driver once a stay is over, so it must learn of every completed reservation.
 
 ## 2. Locked decisions
-
 | Id | Decision | Source |
 |---|---|---|
-| LD1 | Python service on Cloud Run with Postgres | Business: "4-engineer team building Python services on Cloud Run with Postgres" |
-| LD2 | Reservations are made from the mobile app by drivers | Business: "Drivers reserve a parking spot … from our mobile app" |
-| LD3 | Billing is an external system told on completion | Business: "our billing system has to be told so it can charge the driver" |
+| LD1 | Services are built in Python by a 4-engineer team | ask: "a 4-engineer team building Python services" |
+| LD2 | The service runs on Cloud Run | ask: "on Cloud Run with Postgres" |
+| LD3 | The datastore is Postgres | ask: "on Cloud Run with Postgres" |
+| LD4 | Drivers use a mobile app as their client | ask: "from our mobile app" |
+| LD5 | Billing is a separate system that charges the driver | ask: "our billing system has to be told" |
 
 ## 3. Actors & roles
-
 | Actor | Goal |
 |---|---|
-| Driver (mobile app) | Reserve, check in, check out, cancel own reservations |
-| Garage staff (on site) | Look up a garage's reservations for a date |
-| Billing system | Learn of completed reservations |
-
-Roles: drivers act only on their own reservations (R12); staff read reservations (R13). How callers are authenticated is OI-5.
+| Driver (mobile app) | reserve, check in, check out, cancel own reservations |
+| Garage staff | look up a garage's reservations for a date, on site (read only) |
+| Billing system | learn of each completed reservation so it can charge the driver |
 
 ## 4. Use cases
+**Lifecycle.** `BOOKED` → `CHECKED_IN` → `COMPLETED`; `BOOKED` → `CANCELLED`. `COMPLETED` and `CANCELLED` are terminal. Forbidden: cancel once checked in; check in from any state but `BOOKED`; check out from any state but `CHECKED_IN` (repeating a command already applied is a no-op, UC3–UC5); any transition out of a terminal state; skipping `CHECKED_IN` on the way to `COMPLETED`.
 
-**Lifecycle.** States: `reserved` → `checked_in` → `completed`; `reserved` → `cancelled`. Terminal: `completed`, `cancelled`. A repeat of the call that produced the current state is allowed and changes nothing (idempotent retry). Forbidden transitions: cancel from `checked_in` or `completed`; check-in from `cancelled` or `completed`; check-out from `reserved` or `cancelled`; any move out of a terminal state. A `reserved` reservation never checked in stays `reserved` after its window ends and may still be cancelled (OI-14).
+**UC1 Reserve a spot.** Driver gives a garage and a window; the service books a spot there.
+- Main flow: request → a free spot in the garage is booked for the window → reservation returned in `BOOKED`.
+- AC1: a request for a garage with a free spot returns the reservation with its spot and status `BOOKED`.
+- AC2: when every spot in the garage overlaps the window, the request is rejected with `GARAGE_FULL` and nothing is stored.
+- AC3: N concurrent requests for the last free spot yield exactly one `BOOKED` reservation and N−1 `GARAGE_FULL`.
+- AC4: repeating a request with the same client-generated key returns the first reservation and creates no second one (OI-11).
+- AC5: a window that breaks R5, R6, R7 or R8 is rejected with `INVALID_WINDOW`.
+- AC6: an unknown garage is rejected with `GARAGE_NOT_FOUND`.
 
-**UC1 Reserve a spot.** Driver gives garage, start, end (and a retry key, R10). Service assigns a free spot of that garage for the window (OI-1).
-- AC: success returns reservation id, spot, window, status `reserved`.
-- AC: when no single spot of the garage is free for the whole window, rejected with error `NO_SPOT_AVAILABLE`.
-- AC: two concurrent requests for the last free spot: exactly one succeeds, the other gets `NO_SPOT_AVAILABLE`.
-- AC: end not after start (R6), window over 24 h (R14), or start earlier than now minus 5 minutes (R15) → `INVALID_WINDOW`; unknown garage → `GARAGE_NOT_FOUND`.
-- AC: repeating a request with the same retry key returns the original reservation and creates no second one.
-- AC: the same retry key with a different garage or window → `IDEMPOTENCY_KEY_REUSED`.
-- AC: back-to-back windows on one spot (end of one = start of next) both succeed (R19).
+**UC2 Staff day lookup.** Staff give a garage and a date and see that day's reservations.
+- AC1: the result holds every reservation of the garage whose window overlaps the date, whatever its status, each with spot, window, driver id and status (OI-7, OI-13).
+- AC2: a reservation whose window ends exactly when the date starts does not appear on that date (R19, OI-3).
+- AC3: an unknown garage is rejected with `GARAGE_NOT_FOUND`.
 
-**UC2 Look up the day's reservations.** Staff give garage and date.
-- AC: returns every reservation of that garage whose window overlaps that calendar date in the garage's local time, with spot, driver reference, window, status, ordered by start then spot (OI-16).
-- AC: includes cancelled and completed reservations, flagged by status (OI-16).
-- AC: unknown garage → `GARAGE_NOT_FOUND`.
+**UC3 Check in.** Driver arrives and checks in.
+- AC1: `BOOKED` → `CHECKED_IN`, with the check-in time recorded.
+- AC2: checking in a reservation that is neither `BOOKED` nor `CHECKED_IN` is rejected with `ILLEGAL_TRANSITION`.
+- AC3: checking in a reservation already `CHECKED_IN` returns it unchanged, with no second transition.
+- AC4: checking in outside the reservation's window is rejected with `OUTSIDE_WINDOW` (R10, OI-4).
 
-**UC3 Check in.** Driver arrives.
-- AC: `reserved` → `checked_in`, records check-in instant.
-- AC: repeating the call on a `checked_in` reservation returns it unchanged with no error.
-- AC: check-in before the window's start succeeds (OI-6).
-- AC: check-in after the window's end → `CHECKIN_WINDOW_CLOSED` (R16).
-- AC: another driver's or unknown reservation → `RESERVATION_NOT_FOUND` (R12; same for UC4, UC5).
-- AC: on `cancelled` or `completed` → `INVALID_TRANSITION`.
+**UC4 Check out.** Driver leaves and checks out.
+- AC1: `CHECKED_IN` → `COMPLETED`, with the check-out time recorded.
+- AC2: checking out a `BOOKED` or `CANCELLED` reservation is rejected with `ILLEGAL_TRANSITION`.
+- AC3: checking out a reservation already `COMPLETED` returns it unchanged and tells billing nothing new.
 
-**UC4 Check out.** Driver leaves.
-- AC: `checked_in` → `completed`, records check-out instant, and billing is told (R9).
-- AC: repeating on `completed` returns it unchanged and creates no second completion; any re-delivery to billing carries the same dedup id (OI-8).
-- AC: on `reserved` or `cancelled` → `INVALID_TRANSITION`.
+**UC5 Cancel.** Driver cancels before checking in.
+- AC1: `BOOKED` → `CANCELLED`.
+- AC2: cancelling a `CHECKED_IN` or `COMPLETED` reservation is rejected with `ILLEGAL_TRANSITION`.
+- AC3: after a cancel the spot can be booked for the same window by another request.
+- AC4: cancelling a reservation already `CANCELLED` returns it unchanged.
 
-**UC5 Cancel.** Driver cancels before check-in.
-- AC: `reserved` → `cancelled`; the spot's window is free for others immediately.
-- AC: repeating on `cancelled` returns it unchanged.
-- AC: on `checked_in` or `completed` → `INVALID_TRANSITION`.
+**UC6 Tell billing.** A completed reservation is reported to billing.
+- AC1: each completion is delivered to billing at least once, with the reservation id, driver id, garage, spot, window, and actual check-in and check-out times (OI-1).
+- AC2: a billing outage delays delivery and loses nothing.
+- AC3: one completion never produces two different notifications.
 
-**UC6 Read one reservation (OI-16).** Driver fetches own reservation by id.
-- AC: own reservation returned with spot, window, status and check-in/out instants.
-- AC: other driver's or unknown id → `RESERVATION_NOT_FOUND`.
+**UC7 View a reservation (OI-16).** Driver reads one own reservation by id.
+- AC1: the owner gets its current state; anyone else gets `NOT_FOUND`.
 
 ## 5. Business rules
-
 | Id | Rule | Source |
 |---|---|---|
-| R1 | A spot is never double-booked | Business: "a spot must never be double-booked" |
-| R2 | Two reservations of one spot that hold their windows do not overlap | Business: "a spot must never be double-booked" |
-| R20 | A `reserved` or `checked_in` reservation holds its window | Business: "a spot must never be double-booked" |
-| R3 | A cancelled reservation no longer holds its window | OI-15 |
-| R4 | A reservation is made for one garage | Business: "at one of our garages" |
-| R5 | A reservation covers a time window with a start and an end | Business: "for a time window" |
-| R6 | A reservation's end is after its start | OI-3 |
-| R7 | A driver can check in a reservation that is `reserved` | Business: "Drivers check in on arrival" |
-| R8 | A driver can check out a reservation that is `checked_in` | Business: "check out when they leave" |
-| R9 | Billing is told of each reservation that completes | Business: "When a reservation completes, our billing system has to be told" |
-| R10 | A repeated create with the same retry key by the same driver returns the first reservation | OI-4 |
-| R11 | A reservation can be cancelled only while `reserved` | Business: "they can cancel before checking in" |
-| R12 | A driver can act only on that driver's own reservations | OI-5 |
-| R13 | Staff look up reservations by garage and date | Business: "look up the day's reservations on site by garage and date" |
-| R14 | A reservation window is at most 24 hours (proposed — OI-3) | OI-3 |
-| R15 | A reservation's start must be at or after the current instant minus 5 minutes (proposed — OI-3) | OI-3 |
-| R16 | Check-in is rejected after the reservation's end (proposed — OI-6) | OI-6 |
-| R17 | A completed reservation keeps holding its window | OI-7 |
-| R18 | The day of a lookup is a calendar date in the garage's local time zone | OI-2 |
-| R19 | A window is half-open: it includes its start and excludes its end | OI-15 |
+| R1 | A spot is never double-booked | ask: "a spot must never be double-booked" |
+| R2 | A reservation holds one spot of one garage for one time window | ask: "reserve a parking spot at one of our garages for a time window" |
+| R3 | Two windows on one spot overlap when they share any instant | OI-3 |
+| R4 | A `BOOKED` or `CHECKED_IN` reservation holds its spot for its window only | OI-5 |
+| R5 | A window ends after it starts | OI-3 |
+| R6 | A window starts no earlier than the request time | OI-3 |
+| R7 | A window lasts at most 24 hours (proposed — OI-17) | OI-17 |
+| R8 | A window starts at most 30 days after the request time (proposed — OI-17) | OI-17 |
+| R9 | The service chooses the spot for a reservation | OI-2 |
+| R10 | A driver checks in only within the reservation's window | OI-4 |
+| R11 | A driver may check out at any time after checking in | OI-4 |
+| R12 | A driver may cancel only before checking in | ask: "they can cancel before checking in" |
+| R13 | Only the reserving driver may change a reservation's state | OI-16 |
+| R14 | Each completed reservation is reported to billing | ask: "When a reservation completes, our billing system has to be told" |
+| R15 | A reservation completes when its driver checks out | OI-12 |
+| R16 | A date means the calendar day in the garage's own time zone | OI-7 |
+| R17 | Garage staff may read the reservations of any garage | OI-6 |
+| R18 | The same reserve request, repeated by the app, books one spot | OI-11 |
+| R19 | A window includes its start instant | OI-3 |
+| R20 | A window excludes its end instant | OI-3 |
+| R21 | Only the reserving driver may view a reservation | OI-16 |
 
 ## 6. Integrations
-
 | System | Direction | What |
 |---|---|---|
-| Mobile app | in | HTTPS JSON API for UC1, UC3–UC6 |
-| On-site staff tool | in | HTTPS JSON API for UC2 |
-| Billing | out | Notified on every reservation completion; transport and contract OI-8 |
-| Identity | in | Authentication of drivers and staff; OI-5 |
-
-Anticipated (not requested): other consumers of reservation lifecycle events (OI-9).
+| Mobile app | in | driver commands and reads (request/response) |
+| Staff tool | in | day lookup (REST) |
+| Billing | out | completed reservations: reservation id, driver id, garage, spot, window, check-in and check-out times; channel and contract unconfirmed (OI-1) |
+| Identity | in | who the caller is and whether driver or staff (OI-6) |
 
 ## 7. Non-functionals
-
-- NF1 Criticality: money follows completion, so a completion is never lost, delivered at least once with a dedup id (R9, OI-8); user-facing, not life-critical.
-- NF2 Sizing (proposed — OI-10): ≤ 50 garages, ≤ 5,000 spots, ≤ 20 reservation writes/s peak, ≤ 1M reservations/year.
-- NF3 Latency (proposed — OI-10): p95 < 500 ms for UC1–UC6.
-- NF6 Billing delay (proposed — OI-8): a completion reaches billing within 1 minute of check-out.
-- NF4 Availability (proposed — OI-10): 99.9 % monthly for the API.
-- NF5 Data sensitivity: the driver is stored as an opaque external id only (proposed — OI-17); retention OI-11.
+- NF1: criticality — a booking is never lost or double-sold, and a completion is never lost (billing revenue); user-facing through the app.
+- NF2: sizing — up to 50 garages, 500 spots per garage, 5,000 reservations per day (proposed — OI-8).
+- NF3: latency — p95 under 500 ms for every request (proposed — OI-8).
+- NF4: personal data — the service holds only an opaque driver id and no name, contact or plate (assumed — OI-13).
+- NF5: retention — reservations are kept indefinitely (proposed — OI-9).
 
 ## 8. Environment context
-
-Cloud Run (serverless, scale-to-zero capable) and Postgres, Python, team of 4 (LD1). Cloud provider is GCP (Cloud Run is a GCP product); managed Postgres product, messaging product and CI are unknown (OI-8, OI-12). No existing estate is known; no external context sources.
+Cloud Run (LD2) with Postgres (LD3); the cloud is assumed to be GCP (OI-14) and Postgres is assumed hosted as Cloud SQL (OI-14); Cloud Run may scale to zero (assumed — OI-15); team of four Python engineers (LD1); no other estate is known.
 
 ## 9. Out of scope
-
-Each line is an assumption to confirm: OI-13.
-- Pricing, charging, invoicing (billing owns them).
-- Driver accounts, registration, payment methods.
-- Garage and spot administration UI (garages and spots are seeded/managed outside this API).
-- No-show handling, expiry of unclaimed reservations, overstay handling.
-- Modifying a reservation's window (cancel and re-book instead).
-- Early release of a spot after check-out.
-- Waiting lists and spot-type preferences (EV, accessible, size).
+Confirmation requested in OI-10:
+- price calculation, payment and invoicing (billing's job)
+- garage and spot administration (reference data arrives out of band — OI-7)
+- no-show handling and automatic expiry
+- overstay handling
+- a driver's list of own reservations
+- notifications to drivers
+- modifying a reservation's window
+- staff check-in or cancel on a driver's behalf
+- the identity provider itself
 
 ## 10. Open items
-
-All open questions and assumptions: `open-items.md`.
+All in `open-items.md`.

@@ -19,8 +19,9 @@ What these skills add, compared with asking an agent without them:
 
 ## Demo
 
-One agent ran the whole chain from a five-line business ask: the design documents for each phase, then a Python
-service built in three reviewed slices, with its tests.
+One agent ran the whole chain from a five-line business ask, in auto-until-done mode: the design documents for each
+phase, then a Python service built in three reviewed slices, with its tests, stopping with everything awaiting
+approval.
 
 - **[Open the design review page](https://si1verwind17.github.io/backend-skills/demo/)**: the rendered review a
   person reads at a gate, one tab per step, with the decisions owed at each.

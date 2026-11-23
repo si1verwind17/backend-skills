@@ -7,8 +7,10 @@
 > scenario's context, and the right choices for your service come from
 > yours, through the skills' own rules.
 
-One headless agent run (Sonnet, with the plugin's review agents) took the chain end to end from this ask, with the
-review gates waived for the run (everything else the skill requires still applied):
+One headless agent run (Sonnet 5.5, with the plugin's review agents on Opus 5.5, skills at `v1.1.0`) took the chain
+end to end from this ask, in 69 minutes. The run mode was chosen before the start sitting: **auto until done**, so
+the run stopped at no gate and ended at the stop's sitting, with everything awaiting approval (everything else the
+skill requires still applied):
 
 > Drivers reserve a parking spot at one of our garages for a time window,
 > from our mobile app, and a spot must never be double-booked. Garage staff
@@ -24,89 +26,110 @@ It is committed as the run left it, not polished:
   stack selection in the shared format (rendered for people as
   [`design-review.html`](docs/backend-design/design-review.html) — normally
   local-only, committed here as the showcase — and published at
-  <https://si1verwind17.github.io/backend-skills/demo/>), and `open-items.md` with every
-  question the run could not ask, each with the assumption it proceeded on.
-  The data design, architecture and stack documents are in `Form: built`:
-  they point to the code for what the code says.
-- `src/`, `tests/`, `scripts/` — the service, built in three slices on a
-  local branch, one commit per slice: (1) scaffold, migrations and reserving
-  a spot, (2) reading a reservation, check-in, check-out, cancel and the
-  staff day lookup, (3) the outbox relay, scheduler authentication, the
-  Pub/Sub publisher, the container image and its smoke test. Each phase and
-  each slice had an independent review (the slice reviews raised 5, 1 and 3
-  blocking findings, all fixed and re-verified).
-- Verified: 211 tests pass, including a concurrent race for the last free
-  spot against Postgres 18 (one booking wins, the rest are rejected); ruff,
-  strict mypy and the image smoke test clean. An independent grader re-ran
-  them from a fresh clone with the same result.
+  <https://si1verwind17.github.io/backend-skills/demo/>), `plan.md` with the
+  chunk and the run mode, and `open-items.md` with every question the run
+  could not ask, each with the assumption in force. Every document is
+  `REVIEWED`, none `APPROVED`: an auto run never approves its own work. The
+  data design, architecture and stack documents are in `Form: built`: they
+  point to the code for what the code says.
+- `src/`, `migrations/`, `tests/` — the service, built in three slices on a
+  local branch, one commit per slice after one commit per design phase:
+  (1) the foundation, reserving a spot and viewing a reservation,
+  (2) check-in, check-out, cancel and the staff day lookup, (3) the billing
+  feed (an outbox swept by Cloud Scheduler to Pub/Sub), the container image
+  and the README. Each phase and each slice had an independent review: the
+  design reviews raised 7, 4, 3 and 4 blocking findings, the slice reviews
+  3, 0 and 4, all fixed.
+- Verified: 245 tests pass (1 skipped: the Pub/Sub emulator test), including
+  concurrent races for the last free spot against Postgres (exactly one
+  booking wins) and a database constraint that refuses a double booking on
+  its own; ruff and strict mypy clean; the image built and checked. An
+  independent grader re-ran them from a fresh clone with the same result
+  and scored the run 8/8 on the implementation-phase scenario.
 
-What its own grading found against the skill's rules — kept, not hidden:
+Where it stopped: one blocking open item (OI-22 — the per-garage lock casts the garage id to a 32-bit key, so an id
+of 2^31 or more could never be booked; the run capped ids at the API edge meanwhile), five hard-to-reverse unknowns
+recorded as open items with its recommendation in force (the cloud and paid services: Pub/Sub, the authenticating
+front end, Cloud SQL, Cloud Scheduler, scale to zero), and the decisions and build-time changes awaiting approval.
 
-- During architecture the run decided an approved write path (W5, the
-  relay's locking) could not meet its time limits, replaced it before any
-  ruling and recorded the change as a non-blocking open item (OI-23). The
-  skill now says an approved decision that proves wrong in a later design
-  phase stays in force behind a blocking open item.
-- The stack document was switched to `Form: built` and trimmed in a final
-  commit outside any slice, while it still read APPROVED.
-- Each slice was committed before its review and amended after it; the
-  last small fixes of two reviews were not sent back for re-verification
-  (the run said so).
+What its grading found against the skill's rules — kept, not hidden:
+
+- Slices changed decisions in the reviewed documents (the reserve path's order, the check-out stamp, the relay's
+  claim budget, a new error code, the wire status names). Each is listed in its slice's commit and under "changes
+  made while building" at the stop, which is what an auto run does with them; a strict reader may still see the
+  design edited to match the code.
+- Slice 1's last blocking finding was committed after the final verdict, INSUFFICIENT only because the repair was
+  not yet staged, without sending the staged repair back; the phase 0 review's new blocking-grade observation was
+  fixed but not re-verified.
+- The stack phase was committed, then amended ten seconds later with its minor fixes and the `REVIEWED` header.
+
+The previous demo, made with 1.0 with the gates waived, is kept at tag `v1.1.0`.
 
 ---
 
 ## The service
 
-Drivers reserve a parking spot for a time window; staff look up a garage's day; check-in, check-out and
-cancel; billing is told of each completed reservation. Python 3.14 · FastAPI · Postgres 18 · Cloud Run.
+Drivers reserve a garage spot for a time window, check in and out, or cancel. Garage staff list a
+garage's reservations for a date. Each completed reservation is published for billing.
 
-Design: `docs/backend-design/` (requirements, data, architecture, stack, `open-items.md`).
+Design record: `docs/backend-design/` (requirements, data design, architecture, stack, open items).
+`docs/backend-design/open-items.md` lists what still needs a decision from the business or tech owner.
 
-### Develop
+### Layout
 
-```
-python3 -m venv .venv && .venv/bin/pip install --require-hashes -r requirements-dev.lock && .venv/bin/pip install -e . --no-deps
-.venv/bin/pytest                     # integration tests start postgres:18.6 in Docker on host port 55432
-.venv/bin/ruff check . && .venv/bin/ruff format --check . && .venv/bin/mypy src tests
-```
-
-`TEST_DB_PORT` overrides the test database port (host ports 55432–55499 are reserved for this work).
-Refresh the locks with `pip-compile --generate-hashes --allow-unsafe [--extra dev] -o <lock> pyproject.toml`.
-
-### Configuration (environment, validated at boot)
-
-| Variable | Meaning |
+| Path | What |
 |---|---|
-| `DATABASE_URL` | libpq URL; on Cloud Run `postgresql://user:pass@/db?host=/cloudsql/<connection name>` |
-| `IDENTITY_HEADER` | header carrying the gateway's verified claims (base64url JSON with `sub`, optional `role`) |
-| `GCP_PROJECT` | project owning the lifecycle topics |
-| `SCHEDULER_SERVICE_ACCOUNT` | email of the Cloud Scheduler service account allowed to call `/internal/relay` |
-| `RELAY_AUDIENCE` | audience of the scheduler's ID token (the service URL) |
+| `src/parking_reservation/domain/` | business rules and ports, no I/O |
+| `src/parking_reservation/service/` | one class per use case |
+| `src/parking_reservation/repo/` | Postgres access; SQL lives in `repo/sql/*.sql` |
+| `src/parking_reservation/adapters/` | Pub/Sub, Google token verification, clock |
+| `src/parking_reservation/api/` | FastAPI routes, wire models, auth, error mapping |
+| `migrations/` | numbered schema files, applied once each |
 
-Migrations: `python -m parking_reservation.migrate_main` (run as a deploy step before the new revision).
-Garages and spots are not written by the API: seed them with SQL (`garage`, `spot` tables).
+### Run
 
-### Deploy (Cloud Run)
+Python 3.14. Install the pinned dependencies, set the variables of `.env.template`, migrate, serve:
 
-Build the `Dockerfile` (base image pinned by digest; dependencies from the hash-locked `requirements.lock`),
-run the migration job from the same image before each new revision, then deploy with:
-min-instances 1, max-instances 10, concurrency 20 (AD4), request timeout at least 90 s, IAM invoker only for the
-gateway's and the scheduler's service accounts. Cloud Scheduler: `POST <service>/internal/relay` every minute with an
-OIDC token (audience `RELAY_AUDIENCE`), attempt deadline at least 90 s.
+```sh
+python -m venv .venv && .venv/bin/pip install -r requirements.lock
+export DATABASE_URL=... GCP_PROJECT=... AUTH_AUDIENCE=... \
+       FRONT_END_SERVICE_ACCOUNT=... SCHEDULER_SERVICE_ACCOUNT=...
+PYTHONPATH=src .venv/bin/python -m parking_reservation.migrate migrations
+PYTHONPATH=src .venv/bin/uvicorn parking_reservation.asgi:app
+```
 
-Before go-live (AD12): create the four `parking-reservation-<event>-v1` topics with 7-day retention, and have the
-billing team create their no-expiry subscription on `parking-reservation-completed-v1` with a dead-letter topic.
-Parked events (error log "outbox event parked") are re-queued by setting `status = 'pending', attempts = 0` on the row.
+The service refuses to start when a variable is missing or empty. Every call except `GET /health`
+carries a Google ID token: `/v1/*` only from the front end's service account (which sets
+`X-Actor-Id` and `X-Actor-Role`, `driver` or `staff`), `/internal/*` only from Cloud Scheduler's.
 
-Cloud Scheduler must be created with `--oidc-token-audience` equal to `RELAY_AUDIENCE` (its default is the full target
-URL including `/internal/relay`) and the runtime service account needs `roles/pubsub.publisher` on the four topics.
-A run lasts at most about 75 s (55 s loop, 10 s publish deadline, 4 s pool waits, 5 s certificate fetch), hence the
-90 s timeouts.
+### Tests
 
-Alerts to create from the logs (I4, OI-22): (1) any `ERROR` line "outbox event parked"; (2) the relay request line
-(`route=/internal/relay`) with `relay.oldest_pending_age_seconds` above 300, or no line with a `relay` field for 3 minutes
-(the scheduler or its auth is broken: those runs log 401/403 at WARNING without a `relay` field); (3) `WARNING` relay lines with `failed > 0` for several minutes in a row.
+```sh
+nice -n 19 .venv/bin/pytest                     # unit, stubbed and Docker-backed integration
+.venv/bin/ruff check src tests && .venv/bin/ruff format --check src tests && .venv/bin/mypy
+```
 
-The image installs from hash-locked files (`requirements.lock`, `requirements-build.lock`). After changing
-dependencies, rebuild the image and run `scripts/smoke_image.sh` (migrate, `/healthz`, relay rejects an anonymous call):
-it is what proves the packaged `.sql` files are in the image.
+Integration tests start `postgres:17.11` with `docker run` on a free host port in 55432-55499 and
+remove it afterwards. `tests/integration/test_pubsub_emulator.py` runs only with
+`PUBSUB_EMULATOR_HOST` set.
+
+### Operating the billing feed
+
+Cloud Scheduler calls `POST /internal/outbox/relay` every minute. A pending row that has failed 10 times or more is logged as an error on every sweep; a row the
+broker rejected as invalid or oversize is `parked` and logged once with its reason. To
+publish a `published` or `parked` outbox row again (consumers deduplicate on `event_id`):
+
+```sql
+UPDATE outbox SET status = 'pending', published_at = NULL, attempts = 0,
+                  next_attempt_at = now(), updated_at = now()
+WHERE outbox_id = :id;
+```
+
+Billing's subscription on `reservation-completed-v1` must exist before the first completion is
+published; its message retention (7 days by default) bounds how long billing may be down.
+
+### Deploy
+
+Build the image from `Dockerfile` and run it on Cloud Run with IAM authentication required, invoker
+granted only to the front end's and the scheduler's service accounts, as its own service account,
+maximum instances 10, request concurrency 10. Nothing in this repository creates cloud resources.

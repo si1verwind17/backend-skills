@@ -18,10 +18,27 @@ Orchestration: the per-phase cycle and its gates, the shared document format, op
 
 ## Pending validation
 
-- `49c9f39` — fixes from the second round. Validated on 1, 2, 4 and 9 (below); scenario 6 at the next demo run.
-- `6abb917` — a slice never changes an approved decision (not to match the code, not as a change for the re-approval to cover); the branch's first commit holds the approved design documents; under a waiver a blocking item passes the gate with the approved text in force. Validates on scenario 6 at the next demo run.
+- `6abb917` — a slice never changes an approved decision (not to match the code, not as a change for the re-approval to cover). Not exercised by the demo run at `004fe56`: an auto-until-done run approves nothing before its stop, so its slices met only `REVIEWED` documents. Validates on a slice built on approved documents (a gated demo run, or a new scenario). The commit's other parts are measured: the branch carries the design (scenario 6, check 8); the waiver clause is gone from the skill since run modes replaced waivers.
 
 ## Latest results
+
+### Scenario 6, the demo run on Sonnet 5.5 at `004fe56` (v1.1.0)
+
+One run (the demo is one run), the plugin loaded with its review agents (Opus 5.5), in a sandbox with a private
+`/tmp`, the live repository hidden, the user's plugins and hooks off; run mode auto until done, chosen in the prompt
+before the start sitting. Graded by an independent judge on Opus 5.5, who re-ran the tests from a clone (245 passed,
+1 skipped; ruff and strict mypy clean, as the run reported).
+
+| Scenario | Result | Before |
+|---|---|---|
+| 6 | 8/8 | graded on the 1.0 demo run |
+
+Validates `49c9f39` on scenario 6: one commit per design phase and per slice in the final history, each after its
+review. Kept in the demo's README, outside the score: the stack phase was committed and amended ten seconds later
+(minor fixes, the `REVIEWED` header); slice 1's last blocking repair was committed without going back to the
+reviewer (its final verdict was INSUFFICIENT only because the repair was unstaged); a phase 0 observation of blocking
+grade was fixed without re-verification. Slices changed decisions in `REVIEWED` documents and listed each as awaiting
+approval at the stop, as an auto run does; the rule for approved documents (`6abb917`) stays pending.
 
 ### Release regression, Sonnet 5.5 at `7a5898b` / `34a7495`
 
