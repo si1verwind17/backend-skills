@@ -11,7 +11,7 @@ Turning a fuzzy ask or a business brief into `requirements.md` and `open-items.m
 
 ## Pending validation
 
-- `13b64fb` — requirements split by feature past the budget, area-prefixed ids; later-release features named out of scope. Scenario 2 rerun at 34a7495 (below, no split needed); the split itself is validated through building scenario 7.
+None: `13b64fb` (split by feature past the budget, area-prefixed ids, later-release features out of scope) validated on scenario 2 (below, no split needed) and, for the split itself, building scenario 7.
 
 ## Latest results
 

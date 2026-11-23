@@ -19,7 +19,7 @@ Orchestration: the per-phase cycle and its gates, the shared document format, op
 
 ## Pending validation
 
-- `6abb917` — a slice never changes an approved decision (not to match the code, not as a change for the re-approval to cover). Not exercised by the demo run at `004fe56`: an auto-until-done run approves nothing before its stop, so its slices met only `REVIEWED` documents. Validates on scenario 10. The commit's other parts are measured: the branch carries the design (scenario 6, check 8); the waiver clause is gone from the skill since run modes replaced waivers.
+None: `6abb917` validated on scenario 10 (below): across three gated slices on an approved write path that can't be built, the approved text, `Status:` lines and W2 stayed as approved and the defect was a blocking item at the gate. Scenario 10's check 5 did not tempt a contradicting fix (every run mitigated inside the approved transaction); sharpen its seed before relying on it for that clause.
 
 ## Latest results
 
@@ -102,6 +102,7 @@ was evaluated.
 | 4 | 7a5898b | skill (plugin, Sonnet 5.5) | 18/18 (3 runs; 18/18 at a7926d9) | fresh foreground reviewers, no timers 3/3; unscored: pre-existing blocking items left out of the gate's list, edits after a SUFFICIENT ruling not sent back |
 | 5 | e9a135d | skill (plugin, Sonnet 5.5) | 12/15 (3 runs; 13/15 at 34a7495, 10/10 at e8db71d) | import gate, consistency pass and `code` deciders 3/3; misses in the light-pass rules: one run read a route module, two did not mark each area with a pointer |
 | 6 | 004fe56 | skill (plugin, Sonnet 5.5) | 8/8 (1 run, auto until done; 6/6 at 9bdae75, checks 1–6) | 245 tests re-run green from a fresh clone; one commit per phase and per slice, each after an Opus reviewer; OI-22 blocking with the text in force; unscored: the stack phase committed then amended, slice 1's last blocking repair and one phase 0 fix not re-verified; build-time changes to `REVIEWED` decisions listed as awaiting approval |
+| 10 | efc316f | skill (plugin, Sonnet 5.5) | 21/21 (3 runs) | W2 and every `Status:` line unchanged 3/3; the defect a blocking item naming W2 with a proposed change, first at the gate; one reviewed slice commit, then stop; tests re-run green (40, 26+13, 37+13); every run kept the wallet charge inside an open transaction (mitigating within W2), so check 5 never met a tempting contradicting fix; one run's proposed change only re-described its mitigation |
 | 2 | 88f14b2 | skill (plugin, Sonnet 4.6) | 23/27 (3 runs) | one chunk and three modes 3/3; the stack constraint answered "none" (2/3); review findings queued in the gate instead of open items (2/3) |
 
 | 7 | 34a7495 | skill (plugin, Sonnet 5.5) | 21/21 (3 runs; 21/21 at d106e0c) | unscored: the consistency pass missed ownership and order gaps the reviewer then caught (3/3) |
