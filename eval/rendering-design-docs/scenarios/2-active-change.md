@@ -14,7 +14,8 @@ kept and "before implementation starts" replaced by "at this gate".
 
 1. **Tabs**: Change first, then exactly two step tabs (Requirements
    REVIEWED, Data design APPROVED) — no architecture, stack, context or
-   implementation tab.
+   implementation tab; a phase 4 rail entry that is not a link (OI-1 and
+   OI-3 name phase 4).
 2. **Gate tab**: the Requirements tab opens on load (its document is not
    approved).
 3. **Change tab**: the change file rendered; R4, UC2 and W2 link to their
@@ -22,6 +23,6 @@ kept and "before implementation starts" replaced by "at this gate".
    the change" marker.
 4. **Decisions where they belong**: OI-7 at the top of the Requirements tab
    and in the banner; OI-8 on the Data design tab; OI-1 and OI-3 in the
-   gate tab's "later steps" list.
+   gate tab's "later phases" list.
 5. **Faithful content and hygiene**: R4 rendered exactly with its OI-7
    link; sources untouched; the generated-for-humans notice present.

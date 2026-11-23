@@ -68,14 +68,15 @@ add it to `.git/info/exclude` the first time (see `documents.md` in the
   <p class="gen">Generated … from docs/backend-design/</p>
   <p class="sources">Not present: data-dictionary.yaml, context.md</p>   <!-- only when something is missing -->
   <div class="banner"><span class="chip blocking">Blocking</span><div class="rows">   <!-- only when an item blocks -->
-    <p><span class="when">Data design · this step</span><span class="ids"><a class="idref" href="#OI-2">OI-2</a>, …</span></p>
-    <p><span class="when">Architecture</span><span class="ids">…</span></p>   <!-- one row per step, in chain order -->
+    <p><span class="when">Data design · this phase</span><span class="ids"><a class="idref" href="#OI-2">OI-2</a>, …</span></p>
+    <p><span class="when">Architecture</span><span class="ids">…</span></p>   <!-- one row per phase, in chain order -->
   </div></div>
 </header>
 <nav class="tabs">                                 <!-- between header and main, never inside the header; the theme draws it as the step rail -->
   <a class="tab change" data-tab="change" href="#change">Change</a>             <!-- only with a changes/ file -->
   <a class="tab" data-tab="requirements" href="#requirements"><span class="tn">0</span><span class="tl">Requirements</span> <span class="badge APPROVED">APPROVED</span></a>
   <a class="tab gate" data-tab="data" href="#data"><span class="tn">1</span><span class="tl">Data design</span> <span class="badge REVIEWED">REVIEWED</span> <span class="chip gate">Gate</span></a>
+  <span class="tab no-tab"><span class="tn">4</span><span class="tl">Implementation</span> <span class="note">in the code · no tab</span></span>   <!-- only when an open item names phase 4; not a link -->
   <!-- a step tab the change touches adds, after its badge: <span class="touched"></span><span class="vh">touched by the change</span> -->
   <!-- an APPROVED step tab with changes since its approval adds the same marker, with <span class="vh">changes since approval</span> -->
   <span class="spacer"></span>
@@ -85,10 +86,10 @@ add it to `.git/info/exclude` the first time (see `documents.md` in the
 <main>
   <section class="panel" data-tab="data">        <!-- no id: the tab key is not an element id -->
     <div class="panel-head"><span>Phase 1</span><span class="pn">Data design</span><span class="badge REVIEWED">REVIEWED</span></div>
-    <section class="owed"><h2>Decisions owed at this step</h2>
+    <section class="owed"><h2>Decisions owed at this phase</h2>
       <div class="oi" id="OI-2"><p class="oi-title"><span class="chip blocking">Blocking</span><span class="oi-id">OI-2</span> <span class="oi-q">…question…</span></p>
         <dl><dt>Owner</dt><dd>…</dd><dt>Recommendation</dt><dd>…</dd><dt>Assumption in force</dt><dd>…</dd></dl></div>
-      <div class="later"><h3>Due at later steps</h3>                            <!-- gate tab only -->
+      <div class="later"><h3>Due at later phases</h3>                            <!-- gate tab only -->
         <h4>Phase 2 · Architecture</h4><ul>                                       <!-- one group per later phase -->
           <li><span class="chip blocking">Blocking</span> <a class="idref oi-id" href="#OI-1">OI-1</a> …question…</li></ul>
         <h4>Phase 4 · Implementation · no tab</h4><ul>                           <!-- items with no tab are defined here -->
@@ -145,13 +146,13 @@ are those whose lines its diff of the document (`git show <commit> --
 repository, there are none to show. Phases map to tabs as phase 0 = Requirements,
 phase 1 = Data design, phase 2 = Architecture, phase 3 = Stack selection;
 phase 4 (implementation) has no tab — its items go to the gate tab's
-"later steps" list.
+"later phases" list.
 
 ## Page structure
 
 1. **Header** — service name, generation time, and — only when any open
    item is blocking — a **banner** naming the blocking items, one row per
-   step they block (the gate step marked "this step"), each a link that
+   phase they block (the gate's phase marked "this phase"), each a link that
    opens its tab and scrolls to it.
 2. **Tabs**, in this order:
    - **Change** — first, only while a file under `changes/` exists: the
@@ -164,7 +165,13 @@ phase 4 (implementation) has no tab — its items go to the gate tab's
      label shows the **phase number** (0–3, as the open items use it), its
      name and its status badge (DRAFT /
      REVIEWED / APPROVED, from the document's `Status:` line). There is no
-     implementation tab.
+     implementation tab. The rail is headed "Phases" (the theme draws it);
+     every label on the page says "phase", never "step", so the numbers
+     the open items use match the rail.
+   - **Phase 4 on the rail** — only when an open item's `Raised in`,
+     `Blocks` or `Decide by` names phase 4: after the step tabs, a rail
+     entry that is not a tab (`span.tab.no-tab`, no `data-tab`, no link, no
+     panel), numbered 4, "Implementation", noted "in the code · no tab".
    - **Plan** — after the step tabs, only when `plan.md` exists, styled
      like Context, with no number and no status badge: the plan as written.
    - **Context** — last, only when `context.md` exists, set apart from the
@@ -179,10 +186,10 @@ phase 4 (implementation) has no tab — its items go to the gate tab's
    `#architecture`, `#stack`, `#change`, `#plan`, `#context`); a link with a hash
    opens that tab; an unknown hash opens the gate tab.
 4. **Inside a step tab, in order:**
-   - **Decisions owed at this step** — the open items whose `Blocks` or
-     `Decide by` is this step, blocking first, each with owner,
+   - **Decisions owed at this phase** — the open items whose `Blocks` or
+     `Decide by` is this phase, blocking first, each with owner,
      recommendation and assumption in force. On the gate tab, a second
-     short list follows: items due at later steps, so nothing is hidden —
+     short list follows: items due at later phases, so nothing is hidden —
      one line each (id and question), grouped under one heading per phase;
      an item whose step has no tab keeps its owner, recommendation and
      assumption folded under that line.
@@ -235,7 +242,8 @@ phase 4 (implementation) has no tab — its items go to the gate tab's
       diagram and closes back into its place.
 - [ ] One tab per step document present, in chain order, each with its
       status badge matching the document's `Status:` line; no tab for a
-      missing step; no implementation tab; Change tab first only when a
+      missing step; no implementation tab (phase 4, when an open item names
+      it, is a rail entry that is not a link); Change tab first only when a
       `changes/` file exists; Context tab last and visibly not a step.
 - [ ] The gate tab opens by default; each tab's hash opens it.
 - [ ] Every APPROVED document changed since its approval carries the tab
@@ -244,7 +252,7 @@ phase 4 (implementation) has no tab — its items go to the gate tab's
       unchanged document has neither. A Plan tab exactly
       when `plan.md` exists.
 - [ ] Every open item appears on the tab of its `Blocks` / `Decide by`
-      step (blocking first) or in the gate tab's "later steps" list; the
+      phase (blocking first) or in the gate tab's "later phases" list; the
       banner appears exactly when a blocking item exists.
 - [ ] Every table and section present in the sources is present in the
       page, and the page's text matches the sources: compare the rendered

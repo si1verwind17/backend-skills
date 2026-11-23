@@ -80,7 +80,7 @@ a:hover{text-decoration:underline;text-underline-offset:3px}
 /* the rail */
 .tabs{grid-column:1;align-self:start;position:sticky;top:24px;display:flex;flex-direction:column;gap:2px;padding:4px 4px 24px 0;
   max-height:calc(100vh - 24px);overflow-y:auto;scrollbar-width:thin}
-.tabs::before{content:"Steps";margin:0 0 8px 2px;color:var(--muted);font-size:.78rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+.tabs::before{content:"Phases";margin:0 0 8px 2px;color:var(--muted);font-size:.78rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase}
 .tab{position:relative;display:grid;grid-template-columns:32px auto auto 1fr;grid-template-rows:auto auto;column-gap:12px;row-gap:4px;
   align-items:center;padding:10px 10px 10px 8px;border-radius:10px;color:var(--ink);font-weight:550}
 .tab .tl{grid-column:2 / -1;grid-row:1}
@@ -96,6 +96,11 @@ a:hover{text-decoration:underline;text-underline-offset:3px}
 .tabs .spacer{height:18px;border-bottom:1px solid var(--line);margin:0 8px 14px}
 .tabs .spacer:nth-last-child(2){display:none}
 .tab.context,.tab.change{display:flex;padding-left:14px;font-style:italic;font-weight:500;color:var(--muted)}
+/* a phase with no tab (implementation): on the rail so items naming it point at something, but not a link */
+.tab.no-tab{cursor:default;color:var(--muted);font-weight:500}
+.tab.no-tab:hover{background:none}
+.tab.no-tab .tn{border-style:dashed}
+.tab.no-tab .note{grid-column:2 / -1;grid-row:2;justify-self:start;font-size:.75rem;color:var(--muted)}
 
 main{grid-column:2;padding-bottom:48px;min-width:0}
 .panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:8px 40px 40px;box-shadow:0 1px 2px rgba(0,0,0,.04)}

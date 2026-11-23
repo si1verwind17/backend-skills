@@ -10,7 +10,7 @@ truth:
   by default;
 - **6 open items**: OI-5 and OI-6 block phase 3 (shown on the stack tab,
   and in the banner); OI-1 to OI-4 are due at phase 4 (no tab — shown in the
-  stack tab's "later steps" list);
+  stack tab's "later phases" list, and a phase 4 rail entry);
 - **3 Mermaid blocks** (ER diagram, component flowchart, sequence diagram);
 - stable ids UC1–UC2, R1–R3, NF1–NF2, OI-1–OI-6;
 - `context.md` present → a Context tab, visibly not a step.
@@ -32,11 +32,13 @@ truth:
 2. **Step tabs**: exactly four step tabs in chain order (Requirements, Data
    design, Architecture, Stack selection), each with its status badge (3
    APPROVED, 1 DRAFT) matching the document's `Status:` line; no
-   implementation tab; without scripting, all content still readable.
+   implementation tab, but a phase 4 "Implementation" entry on the rail
+   after the stack tab that is not a link; the rail headed "Phases" and no
+   page label saying "step"; without scripting, all content still readable.
 3. **Gate tab opens**: the stack tab is open on load; each tab has a hash
    that opens it.
 4. **Decisions where they belong**: OI-5 and OI-6 at the top of the stack
-   tab; OI-1–OI-4 in its "later steps" list; each with owner,
+   tab; OI-1–OI-4 in its "later phases" list; each with owner,
    recommendation, assumption; a banner listing OI-5 and OI-6 that opens
    the stack tab.
 5. **Context tab**: present, last, set apart, unnumbered, no status badge,
@@ -52,5 +54,5 @@ truth:
    inlined verbatim; the tab bar sits between header and main, each step
    tab's name in a `tl` span; panels carry
    no id; diagrams rendered with `theme/mermaid.json` (no default lavender);
-   blocking shown by a `Blocking` chip, not colour alone; the later-steps
+   blocking shown by a `Blocking` chip, not colour alone; the later-phases
    list is one line per item, grouped under a heading per phase.
