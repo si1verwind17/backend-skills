@@ -13,7 +13,7 @@ starts with one commit on `main`.
 2. **One commit per slice**: each slice is one commit containing its code,
    its tests and the documents it changed; slices are named in the reply.
 3. **Review per slice**: each slice has an independent code review with
-   dispositioned findings before its (waived) gate.
+   dispositioned findings before its commit.
 4. **Documents follow the code**: once migrations exist, `data-design.md` is
    `Form: built` with the physical model replaced by a pointer; no DDL copy
    remains beside the migrations.
@@ -23,6 +23,6 @@ starts with one commit on `main`.
 7. **Approved decisions hold**: no slice or later design phase edits what an
    approved document decides; each decision found wrong is an open item
    that blocks, with the approved text left in force.
-8. **The branch carries the design**: the approved design documents and
-   `open-items.md` are committed on the implementation branch, before the
-   first slice.
+8. **The branch carries the design**: the approved (in an auto mode,
+   reviewed) design documents and `open-items.md` are committed on the
+   implementation branch, before the first slice.

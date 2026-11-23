@@ -24,7 +24,7 @@ phase, then a Python service built in three reviewed slices, with its tests, sto
 approval.
 
 - **[Open the design review page](https://si1verwind17.github.io/backend-skills/demo/)**: the rendered review a
-  person reads at a gate, one tab per step, with the decisions owed at each.
+  person reads at the run's stop: one tab per step, everything awaiting approval, the blocking item first.
 - [The design documents](demo/parking-reservation/docs/backend-design/): requirements, data design, architecture,
   stack selection and open items, as the agents read them.
 - [The demo](demo/parking-reservation/README.md): the ask, how the run was made, the service and its tests, and
