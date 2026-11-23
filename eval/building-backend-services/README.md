@@ -15,10 +15,11 @@ Orchestration: the per-phase cycle and its gates, the shared document format, op
 | [7](scenarios/7-large-prd-sizing.md) | a PRD too large for one requirements document: feature map, foundation chunk, later features listed, the start sitting |
 | [8](scenarios/8-rulings-on-approved-docs.md) | rulings recorded in approved documents: no flip to DRAFT, write-downs need no approval, consequences kept apart |
 | [9](scenarios/9-auto-until-design-done.md) | an auto run until design done: no intermediate gates, agent decisions, a requirement that can't be built as written |
+| [10](scenarios/10-approved-decision-proves-wrong.md) | a gated slice on an approved write path that can't be built: the approved text stays, a blocking item leads the gate, no contradicting fix in the slice |
 
 ## Pending validation
 
-- `6abb917` — a slice never changes an approved decision (not to match the code, not as a change for the re-approval to cover). Not exercised by the demo run at `004fe56`: an auto-until-done run approves nothing before its stop, so its slices met only `REVIEWED` documents. Validates on a slice built on approved documents (a gated demo run, or a new scenario). The commit's other parts are measured: the branch carries the design (scenario 6, check 8); the waiver clause is gone from the skill since run modes replaced waivers.
+- `6abb917` — a slice never changes an approved decision (not to match the code, not as a change for the re-approval to cover). Not exercised by the demo run at `004fe56`: an auto-until-done run approves nothing before its stop, so its slices met only `REVIEWED` documents. Validates on scenario 10. The commit's other parts are measured: the branch carries the design (scenario 6, check 8); the waiver clause is gone from the skill since run modes replaced waivers.
 
 ## Latest results
 
