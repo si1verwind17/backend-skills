@@ -28,9 +28,12 @@ Every document opens with the shared header and uses the shared ids
 this skill's folder: [../building-backend-services/documents.md](../building-backend-services/documents.md) — to find it, take the folder this SKILL.md is in, go up one level, then into `building-backend-services/`, not relative to your working directory); every open
 question and every assumption about the business or the environment is a
 row in `open-items.md`, never a section here; a choice the requirements
-leave to design is a decision row marked `agent` — except an id's scope
-(per-parent or global numbering), which is what the id means to the
-business: an open item, even when the wording seems to settle it.
+leave to design is a decision row marked `agent` — except the scope
+(per-parent or global numbering) of an id people outside the service count
+with ("profile number 2", an invoice number), which is what the id means to
+the business: an open item, even when the wording seems to settle it. A
+surrogate key or a generated secret (a pickup code, a token) takes its scope
+from collision or security needs: an `agent` row.
 
 The header and the open-items format, in short:
 
@@ -359,8 +362,9 @@ Walk these checks against your actual output files; fix, don't rationalize:
       document is marked "pinned in stack selection". When no product is
       fixed, that row also names the dialect the physical model is
       written in.
-- [ ] Every id whose scope the requirements leave open (per-parent or
-      global numbering) has its own open-item row.
+- [ ] Every id people outside the service count with, whose scope the
+      requirements leave open (per-parent or global numbering), has its own
+      open-item row; surrogate keys and generated secrets are `agent` rows.
 - [ ] Relational: every table — lookup, helper, inbox/dedup, and log tables
       included — has `created_at TIMESTAMPTZ NOT NULL DEFAULT now()`, named
       exactly `created_at`; `updated_at` present on updatable tables only.

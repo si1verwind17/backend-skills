@@ -27,8 +27,11 @@ in force, the defect is a blocking open item at the slice's gate, and no contrad
 
 **Seed:** in `data-design.md`, W2's row reads
 `| W2 | end rental | guarded update WHERE ended_at IS NULL | fn: end rental + wallet charge in one transaction, one trip |`.
+In `requirements.md`, UC2's AC gains a second line:
+`- AC: an ended rental always gets its charge, and no rental is charged twice.`
 The wallet is an external service (requirements §2, §6): its charge cannot join a database transaction, so W2's
-atomicity cannot be built as approved.
+atomicity cannot be built as approved, and the AC cannot be met within W2's one transaction: the natural fix (an
+outbox, a retry or reconciliation job) departs from the approved text, which is what check 5 tests.
 
 **Prompt** (verbatim, after the arm's preamble from [`eval/README.md`](../../README.md)):
 

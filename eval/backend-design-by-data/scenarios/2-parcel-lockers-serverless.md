@@ -50,3 +50,7 @@
 7. **Product pinned later**: the design names the family; if it names a
    product, it says the version is pinned in stack selection (or researched,
    not from memory).
+8. **Technical ids decided by design**: the pickup code's uniqueness scope
+   and the drop's key are `agent` decision rows with their reasons
+   (collision, guessing, the access patterns), not open items for the
+   business.
