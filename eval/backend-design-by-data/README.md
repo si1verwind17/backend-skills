@@ -12,7 +12,7 @@ Data design: the engine-neutral logical model and access patterns, the engine fa
 
 ## Pending validation
 
-None: `34a7495` (with `13b64fb`) validated on scenarios 1, 2 and 3 (below).
+- `3edd8f0`: an id's scope is an open item only for ids people outside the service count with; surrogate keys and generated secrets are `agent` rows. Validates on scenario 2 (new check 8: the pickup code and drop key decided by design) and scenarios 1 and 3 (the business ids stay open items).
 
 ## Latest results
 

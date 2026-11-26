@@ -19,7 +19,7 @@ Orchestration: the per-phase cycle and its gates, the shared document format, op
 
 ## Pending validation
 
-None: `6abb917` validated on scenario 10 (below): across three gated slices on an approved write path that can't be built, the approved text, `Status:` lines and W2 stayed as approved and the defect was a blocking item at the gate. Scenario 10's check 5 did not tempt a contradicting fix (every run mitigated inside the approved transaction); sharpen its seed before relying on it for that clause.
+- `6abb917`, check 5 only (no contradicting fix in the slice): the rest validated on scenario 10 (below). Scenario 10's seed, sharpened in `3edd8f0` with a UC2 AC that W2's one transaction cannot meet, validates it: the earlier runs all mitigated inside the approved transaction, so the clause was never tempted.
 
 ## Latest results
 
